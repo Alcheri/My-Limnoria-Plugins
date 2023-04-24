@@ -162,7 +162,7 @@ class Weather(callbacks.Plugin):
             precipico = '☔'
         except KeyError:
             precip = 0
-            precipico = ''
+            precipico = '☂'
         temp   = round(current['temp'])
         vis    = round((current['visibility'] / 1000))
         uvi    = round(current['uvi'])
