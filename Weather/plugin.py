@@ -282,7 +282,8 @@ class Weather(callbacks.Plugin):
     @lru_cache(maxsize=4)    #XXX LRU caching
     def osm_geocode(self, location):
         location = location.lower()
-        uri = f'https://nominatim.openstreetmap.org/search/{location}?format=jsonv2&accept-language="en"'
+        # uri = f'https://nominatim.openstreetmap.org/search/{location}?format=jsonv2&accept-language="en"'
+        uri = f'https://nominatim.openstreetmap.org/search?q={location}?format=jsonv2&accept-language="en"'
         log.info(f'Weather: using url {uri} (OSM/Nominatim)')
         # User agent is required
         try:
