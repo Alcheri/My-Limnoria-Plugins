@@ -7,8 +7,8 @@ This plugin uses Alpha-2 Code for country code [iso.org](https://www.iso.org/obp
 Configuring:
 ===========
 
-This plugin uses Open Weather to get data. A free API key is required.\
-Get an API key: [OpenWeather](https://openweathermap.org/)
+This plugin uses OpenWeather One Call API 3.0 to gather data requiring a subscription.\
+Subscription: [One Call API 3.0](https://openweathermap.org/api/one-call-3)
 
 Setting up:
 ==========

@@ -372,7 +372,7 @@ class Weather(callbacks.Plugin):
         }
         # Base URI for Openweathermap
         base_uri = ('http://api.openweathermap.org')
-        url = f'{base_uri}/data/2.5/onecall?'
+        url = f'{base_uri}/data/3.0/onecall?'
 
         try:
             Weather = requests.get(url, params, headers=headers)
