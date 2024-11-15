@@ -150,7 +150,10 @@ def dd2dms(longitude, latitude):
     return (x, y)
 
 class Weather(callbacks.Plugin):
-    """Using Google Geocoding API"""
+    """
+    A simple Weather plugin for Limnoria
+    using the OpenWeather and Google Maps API's   
+    """
     threaded = True
 
     def __init__(self, irc):
@@ -201,11 +204,11 @@ class Weather(callbacks.Plugin):
         day1lowC    = round(day1['temp'].get('min'))
 
         # Forecast day two
-        #day2        = data['daily'][2]
-        #day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
-        #day2weather = day2['weather'][0].get('description')
-        #day2highC   = round(day2['temp'].get('max'))
-        #day2lowC    = round(day2['temp'].get('min'))
+        day2        = data['daily'][2]
+        day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
+        day2weather = day2['weather'][0].get('description')
+        day2highC   = round(day2['temp'].get('max'))
+        day2lowC    = round(day2['temp'].get('min'))
 
         # Formatted output
         a = f'🏠 {location} :: UTC {utc} :: Lat {LAT} Lon {LON} :: {staticon} {desc} '
@@ -213,12 +216,12 @@ class Weather(callbacks.Plugin):
         c = f'| {precipico} Precip {precip}mm/h | 💦 Humidity {humid}{percent_sign} | Current {colour(temp)} '
         d = f'| Feels like {colour(feelslike)} | 🍃 Wind {wind}Km/H {arrow} '
         e = f'| 💨 Gust {gust}m/s | 👁 Visibility {vis}Km | UVI {uvi} {uvicon} '
-        #f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
-        #g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
+        f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
+        g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
 
         s = ''
 
-        seq = [a, b, c, d, e]
+        seq = [a, b, c, d, e, f, g]
 
         return((s.join(seq)))
 
@@ -277,6 +280,7 @@ class Weather(callbacks.Plugin):
         if not apikey:
             raise callbacks.Error( \
                 'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
+        # Adapted from James Lu's NuWeather plugin https://github.com/jlu5/
         #Base URI
         uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}'.format(utils.web.urlquote(location), apikey)
         self.log.debug('Weather: using url %s (google)', uri)    
@@ -285,17 +289,17 @@ class Weather(callbacks.Plugin):
             cache[uri] = _contact_server_(uri)
     
         get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
-
+        
         data = json.loads(get, strict=False)
         if data['status'] != "OK":
             raise callbacks.Error("{0} from Google Maps for location {1}".format(data['status'], location))
-        
-        data = data['results'][0]
-        lat = data['geometry']['location']['lat']
-        lon = data['geometry']['location']['lng']
+              
+        data         = data['results'][0]
+        lat          = data['geometry']['location']['lat']
+        lon          = data['geometry']['location']['lng']
         display_name = data['formatted_address']
-        place_id = data['place_id']
-
+        place_id     = data['place_id']
+    
         result = (display_name, lat, lon, place_id)
         # Delay
         time.sleep(delay) #in seconds
