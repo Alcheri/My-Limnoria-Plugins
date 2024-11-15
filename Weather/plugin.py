@@ -27,12 +27,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 ###
-import urllib.request, urllib.parse 
 import json, time
 import math, re
 
 from datetime import datetime
-from requests.utils import requote_uri
 from functools import lru_cache
 from supybot import utils, plugins, ircutils, callbacks, log
 from supybot.commands import *
@@ -59,7 +57,7 @@ cache = dict()
 
 def _contact_server_(uri):
     response = utils.web.getUrl(uri)
-    log.info(f'_contact_server_: Cache')
+
     return response
 
 def find_numbers_and_text(s):
@@ -71,32 +69,6 @@ def find_numbers_and_text(s):
         return numbers, text
     else:
         return 0, 0
-
-@lru_cache(maxsize=64, typed=False)
-#Includes example parsing out the postal code
-def google_geo_API(address,api="",delay=3):
-    base = r"https://maps.googleapis.com/maps/api/geocode/json?"
-    addP = "address=" + requote_uri(address)
-    GeoUrl = base + addP + "&key=" + api
-
-    if GeoUrl not in cache:
-      cache[GeoUrl] = _contact_server_(GeoUrl)
-
-    response = urllib.request.urlopen(GeoUrl)
-    jsonRaw = response.read()
-    jsonData = json.loads(jsonRaw)
-
-    if jsonData['status'] == 'OK':
-        resu = jsonData['results'][0]
-        post_code = -1
-        for i in resu['address_components']:
-            if i['types'][0] == 'postal_code':
-                post_code = i['long_name'] #not sure if everything always has a long name?
-        finList = [resu['formatted_address'],resu['geometry']['location']['lat'],resu['geometry']['location']['lng'],post_code]
-    else:
-        finList = False
-    time.sleep(delay) #in seconds
-    return finList
 
 def colour(celsius):
     """Colourise temperatures"""
@@ -297,6 +269,40 @@ class Weather(callbacks.Plugin):
         }
         return switcher.get(code, '🤷')
 
+    @lru_cache(maxsize=64, typed=False)
+    def google_maps(self, location, delay=3):
+        location = location.lower()
+        apikey = self.registryValue('googlemapsAPI')
+        # Missing Google Maps API Key.
+        if not apikey:
+            raise callbacks.Error( \
+                'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
+        #Base URI
+        uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}'.format(utils.web.urlquote(location), apikey)
+        self.log.debug('Weather: using url %s (google)', uri)    
+
+        if uri not in cache:
+            cache[uri] = _contact_server_(uri)
+    
+        get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
+
+        data = json.loads(get, strict=False)
+        if data['status'] != "OK":
+            raise callbacks.Error("{0} from Google Maps for location {1}".format(data['status'], location))
+        
+        data = data['results'][0]
+        lat = data['geometry']['location']['lat']
+        lon = data['geometry']['location']['lng']
+        display_name = data['formatted_address']
+        place_id = data['place_id']
+
+        result = (display_name, lat, lon, place_id)
+        # Delay
+        time.sleep(delay) #in seconds
+
+        return result
+
+    # Adapted from https://stackoverflow.com/a/7490772
     @staticmethod
     def _get_wind_direction(degrees):
         """Calculate wind direction"""
@@ -326,21 +332,15 @@ class Weather(callbacks.Plugin):
 
     @wrap(['text'])
     def google(self, irc, msg, args, location):
-        """<location>"""
-        api_key = self.registryValue('googlemapsAPI')
-        # Missing Google Maps API Key.
-        if not api_key:
-            raise callbacks.Error( \
-                'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
+        """Looks up <location>
+        
+        [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude]
+        """
         location = location.lower()
      
-        log.info(f'Google: running on {irc.network}/{msg.channel}')
+        geo_resu = self.google_maps(location, delay=0)
 
-        geo_resu = google_geo_API(location, api_key, delay=0)
-
-        info = google_geo_API.cache_info()
-
-        irc.reply(f'From Google Maps: {geo_resu} {info}')
+        irc.reply(f'From Google Maps: {geo_resu}')
 
     @wrap(['text'])
     def weather(self, irc, msg, args, location):
@@ -362,21 +362,15 @@ class Weather(callbacks.Plugin):
         if not apikey:
             raise callbacks.Error( \
                 'Please configure the OpenWeatherMap API key via config plugins.Weather.openweatherAPI [your_key_here]')
-        
-        api_key = self.registryValue('googlemapsAPI')
-        # Missing Google Maps API Key.
-        if not api_key:
-            raise callbacks.Error( \
-                'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
-          
+                 
         location = location.lower()
 
-        # Get co-ordinates from a postcode and send to Google Maps API.
+        # Get co-ordinates from a postcode and send to Google Maps.
         (numbers, text) = find_numbers_and_text(location)
         if numbers and text:
-           data = google_geo_API(location, api_key, delay=0)
-        else: #Get location from Google Maps API.
-            data = google_geo_API(location, api_key, delay=0)
+           data = self.google_maps(location, delay=0)
+        else: #Get location from Google Maps.
+            data = self.google_maps(location, delay=0)
             if not data:
                 raise callbacks.Error("Unknown location: %s." % location)
         
@@ -395,7 +389,7 @@ class Weather(callbacks.Plugin):
             'appid':   apikey,
             'units':   'metric',
         })
-        self.log.debug('Weather: using url %s (geocoding)', uri + location)
+        self.log.debug('Weather: using url %s (openweathermap)', uri)
 
         try:
             get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
@@ -407,10 +401,10 @@ class Weather(callbacks.Plugin):
 
         irc.reply(f'{weather_output}')
 
-    @wrap(["something"])
+    @wrap(['something'])
     def help(self, irc):
         """418: I\'m a teapot"""
-                
+                   
 Class = Weather
 
 
