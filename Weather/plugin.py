@@ -349,9 +349,9 @@ class Weather(callbacks.Plugin):
 
         [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude]
 
-        I.E. `weather` Ballarat or Ballarat AU OR 3350, AU or `weather` -37.5303188, 143.8297033
+        I.E. `weather` Ballarat or Ballarat AU OR 3350 AU or `weather` -37.5303188, 143.8297033
 
-         | `lookup` [city <(Alpha-2) country code>] to get latitude and longitude of a city/town.
+         | `google` [city <(Alpha-2) country code>] to get latitude and longitude of a city/town.
         """
         # Not 'enabled' in #channel.
         if not self.registryValue('enable', msg.channel, irc.network):
@@ -407,7 +407,10 @@ class Weather(callbacks.Plugin):
 
         irc.reply(f'{weather_output}')
 
-                    
+    @wrap(["something"])
+    def help(self, irc):
+        """418: I\'m a teapot"""
+                
 Class = Weather
 
 
