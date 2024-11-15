@@ -1,5 +1,5 @@
 ###
-# Copyright © 2021, Barry Suridge
+# Copyright (c) 2024, Barry Suridge
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,16 +27,22 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 ###
-import math
-import re
-import requests
-from datetime import datetime
-from functools import lru_cache
-from requests.exceptions import HTTPError
+import urllib.request, urllib.parse 
+import json, time
+import math, re
 
-import supybot.log as log
+from datetime import datetime
+from requests.utils import requote_uri
+from functools import lru_cache
+from supybot import utils, plugins, ircutils, callbacks, log
 from supybot.commands import *
-from supybot import callbacks, ircutils
+try:
+    from supybot.i18n import PluginInternationalization
+    _ = PluginInternationalization('Weather')
+except ImportError:
+    # Placeholder that allows to run the plugin on a bot
+    # without the i18n module
+    _ = lambda x: x
 
 #XXX Unicode symbol (https://en.wikipedia.org/wiki/List_of_Unicode_characters#Latin-1_Supplement)
 apostrophe     = u'\N{APOSTROPHE}'
@@ -46,8 +52,51 @@ percent_sign   = u'\N{PERCENT SIGN}'
 quotation_mark = u'\N{QUOTATION MARK}'
 
 headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Debian; Linux x86_64; rv:35.0) Gecko/20100101 Firefox/35.0'
+    'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0'
 }
+    
+cache = dict()
+
+def _contact_server_(uri):
+    response = utils.web.getUrl(uri)
+    log.info(f'_contact_server_: Cache')
+    return response
+
+def find_numbers_and_text(s):
+    # Find all numbers (integers and decimals)
+    numbers = re.findall(r'\d+\.\d+|\d+', s)
+    # Find all text (words)
+    text = re.findall(r'[a-zA-Z]+', s)
+    if numbers and text:
+        return numbers, text
+    else:
+        return 0, 0
+
+@lru_cache(maxsize=64, typed=False)
+#Includes example parsing out the postal code
+def google_geo_API(address,api="",delay=3):
+    base = r"https://maps.googleapis.com/maps/api/geocode/json?"
+    addP = "address=" + requote_uri(address)
+    GeoUrl = base + addP + "&key=" + api
+
+    if GeoUrl not in cache:
+      cache[GeoUrl] = _contact_server_(GeoUrl)
+
+    response = urllib.request.urlopen(GeoUrl)
+    jsonRaw = response.read()
+    jsonData = json.loads(jsonRaw)
+
+    if jsonData['status'] == 'OK':
+        resu = jsonData['results'][0]
+        post_code = -1
+        for i in resu['address_components']:
+            if i['types'][0] == 'postal_code':
+                post_code = i['long_name'] #not sure if everything always has a long name?
+        finList = [resu['formatted_address'],resu['geometry']['location']['lat'],resu['geometry']['location']['lng'],post_code]
+    else:
+        finList = False
+    time.sleep(delay) #in seconds
+    return finList
 
 def colour(celsius):
     """Colourise temperatures"""
@@ -71,7 +120,7 @@ def colour(celsius):
     return ircutils.mircColor(string, colour)
 
 #XXX Converts decimal degrees to degrees, minutes, and seconds
-@lru_cache(maxsize=4)    #XXX LRU caching
+@lru_cache(maxsize=64)    #XXX LRU caching
 def dd2dms(longitude, latitude):
     # math.modf() splits whole number and decimal into tuple
     # eg 53.3478 becomes (0.3478, 53)
@@ -129,10 +178,7 @@ def dd2dms(longitude, latitude):
     return (x, y)
 
 class Weather(callbacks.Plugin):
-    """
-    A simple Weather plugin for Limnoria
-    using the OpenWeatherMap API
-    """
+    """Using Google Geocoding API"""
     threaded = True
 
     def __init__(self, irc):
@@ -144,8 +190,6 @@ class Weather(callbacks.Plugin):
         """
         Gather all the data - format it
         """
-        log.info(f'Weather: format_weather_output {location}')
-
         current    = data['current']
         icon       = current['weather'][0].get('icon')
         staticon   = self._get_status_icon(icon)
@@ -185,11 +229,11 @@ class Weather(callbacks.Plugin):
         day1lowC    = round(day1['temp'].get('min'))
 
         # Forecast day two
-        day2        = data['daily'][2]
-        day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
-        day2weather = day2['weather'][0].get('description')
-        day2highC   = round(day2['temp'].get('max'))
-        day2lowC    = round(day2['temp'].get('min'))
+        #day2        = data['daily'][2]
+        #day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
+        #day2weather = day2['weather'][0].get('description')
+        #day2highC   = round(day2['temp'].get('max'))
+        #day2lowC    = round(day2['temp'].get('min'))
 
         # Formatted output
         a = f'🏠 {location} :: UTC {utc} :: Lat {LAT} Lon {LON} :: {staticon} {desc} '
@@ -197,15 +241,16 @@ class Weather(callbacks.Plugin):
         c = f'| {precipico} Precip {precip}mm/h | 💦 Humidity {humid}{percent_sign} | Current {colour(temp)} '
         d = f'| Feels like {colour(feelslike)} | 🍃 Wind {wind}Km/H {arrow} '
         e = f'| 💨 Gust {gust}m/s | 👁 Visibility {vis}Km | UVI {uvi} {uvicon} '
-        f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
-        g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
+        #f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
+        #g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
 
         s = ''
-        seq = [a, b, c, d, e, f, g]
+
+        seq = [a, b, c, d, e]
+
         return((s.join(seq)))
 
-    @staticmethod
-    def _format_uvi_icon(uvi):
+    def _format_uvi_icon(self, uvi):
         """
         Diplays a coloured icon relevant to the UV Index meter.
         Low: Green Moderate: Yellow High: Orange Very High: Red
@@ -257,6 +302,7 @@ class Weather(callbacks.Plugin):
         """Calculate wind direction"""
         num = degrees
         val = int((num/22.5)+.5)
+
         # Decorated output
         arr = [
             '↑ N',
@@ -278,58 +324,23 @@ class Weather(callbacks.Plugin):
         ]
         return arr[(val % 16)]
 
-    # Credit: https://github.com/jlu5/SupyPlugins/blob/7fdf95074c415bfd92488c2a1177306cd22f10eb/NuWeather/plugin.py#L261
-    @lru_cache(maxsize=4)    #XXX LRU caching
-    def osm_geocode(self, location):
+    @wrap(['text'])
+    def google(self, irc, msg, args, location):
+        """<location>"""
+        api_key = self.registryValue('googlemapsAPI')
+        # Missing Google Maps API Key.
+        if not api_key:
+            raise callbacks.Error( \
+                'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
         location = location.lower()
-        # uri = f'https://nominatim.openstreetmap.org/search/{location}?format=jsonv2&accept-language="en"'
-        uri = f'https://nominatim.openstreetmap.org/search?q={location}&format=jsonv2'
-        log.info(f'Weather: using url {uri} (OSM/Nominatim)')
-        # User agent is required
-        try:
-            req = requests.get(uri, headers=headers)
+     
+        log.info(f'Google: running on {irc.network}/{msg.channel}')
 
-            # If the response was successful, no Exception will be raised
-            req.raise_for_status()
+        geo_resu = google_geo_API(location, api_key, delay=0)
 
-            data = req.json()
-        except HTTPError as http_err:
-            self.log.debug(f'Weather: error {http_err} searching for {location} from OSM/Nominatim:',
-                      exc_info=True)
-            data = None
-        if not data:
-            raise callbacks.Error(f'Unknown location {location} from OSM/Nominatim')
-        data = data[0]
-        # Limit location verbosity to 3 divisions (e.g. City, Province/State, Country)
-        display_name = data['display_name']
-        display_name_parts = display_name.split(', ')
-        if len(display_name_parts) > 3:
-            # Try to remove ZIP code-like divisions
-            if display_name_parts[-2].isdigit():
-                display_name_parts.pop(-2)
-            display_name = ', '.join(
-                [display_name_parts[0]] + display_name_parts[-2:])
+        info = google_geo_API.cache_info()
 
-        lat = data['lat']
-        lon = data['lon']
-
-        try:
-            osm_id = data['osm_id']
-        except KeyError:
-            osm_id = ''
-        return (lat, lon, display_name, osm_id, 'OSM/Nominatim')
-
-    @staticmethod
-    def _query_location(location):
-        numbers = re.findall('[0-9]+', location)
-        # return True if numbers else False
-        if numbers:
-            code = location.split(',', 1)[0]
-            try:
-                country = re.sub('[ ]', '', location.split(',', 1)[1])
-            except IndexError:
-                raise callbacks.Error('<postcode, country code>')
-        return
+        irc.reply(f'From Google Maps: {geo_resu} {info}')
 
     @wrap(['text'])
     def weather(self, irc, msg, args, location):
@@ -342,68 +353,62 @@ class Weather(callbacks.Plugin):
 
          | `lookup` [city <(Alpha-2) country code>] to get latitude and longitude of a city/town.
         """
-        location = location.lower()
-
-        apikey = self.registryValue('openweatherAPI')
-        # Missing API Key.
-        if not apikey:
-            raise callbacks.Error( \
-                'Please configure the OpenWeatherMap API key in config plugins.Weather.openweatherAPI')
-
         # Not 'enabled' in #channel.
         if not self.registryValue('enable', msg.channel, irc.network):
             return
 
-        log.info(f'Weather: running on {irc.network}/{msg.channel}')
+        apikey = self.registryValue('openweatherAPI')
+        # Missing OpenWeatherMap API Key.
+        if not apikey:
+            raise callbacks.Error( \
+                'Please configure the OpenWeatherMap API key via config plugins.Weather.openweatherAPI [your_key_here]')
+        
+        api_key = self.registryValue('googlemapsAPI')
+        # Missing Google Maps API Key.
+        if not api_key:
+            raise callbacks.Error( \
+                'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
+          
+        location = location.lower()
 
-        # Check for a postcode
-        self._query_location(location)
+        # Get co-ordinates from a postcode and send to Google Maps API.
+        (numbers, text) = find_numbers_and_text(location)
+        if numbers and text:
+           data = google_geo_API(location, api_key, delay=0)
+        else: #Get location from Google Maps API.
+            data = google_geo_API(location, api_key, delay=0)
+            if not data:
+                raise callbacks.Error("Unknown location: %s." % location)
+        
+        #Google Maps result
+        results = {
+            'town'     : data[0],
+            'latitude' : data[1],
+            'longitude': data[2],
+            'postcode' : data[3]
+        }
 
-        # Get details from OSM/Nominatim
-        (latitude, longitude, location, id, text) = self.osm_geocode(location)
-
-        # Get the weather data
-        params = {
-            'lat':     latitude,
-            'lon':     longitude,
+        # Base URI for Openweathermap
+        uri = 'https://api.openweathermap.org/data/3.0/onecall?' + utils.web.urlencode({
+            'lat':     results['latitude'],
+            'lon':     results['longitude'],
             'appid':   apikey,
             'units':   'metric',
-            'exclude': 'minutely'
-        }
-        # Base URI for Openweathermap
-        base_uri = ('http://api.openweathermap.org')
-        url = f'{base_uri}/data/3.0/onecall?'
+        })
+        self.log.debug('Weather: using url %s (geocoding)', uri + location)
 
         try:
-            Weather = requests.get(url, params, headers=headers)
-
-            # If the response was successful, no Exception will be raised
-            Weather.raise_for_status()
-        except HTTPError as http_err:
-            self.log.error(f'Weather: HTTP error occurred: {http_err}',
-                    exc_info=True)
-            raise callbacks.Error(f'Weather: HTTP error occurred: {http_err}')
+            get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
+            data = json.loads(get, strict=False)
         except Exception as err:
-            self.log.error(f'Weather: an error occurred: {err}',
-                    exc_info=True)
             raise callbacks.Error(f'Weather: an error occurred: {err}')
-        else:
-            weather = Weather.json()
 
-            # Print weather details and forecast(s)
-            irc.reply(self.format_weather_output(location, weather))
+        weather_output = self.format_weather_output(results['town'], data)
 
-    @wrap(['text'])
-    def lookup(self, irc, msg, args, location):
-        """<location>"""
-        location = location.lower()
-        (lat, lon, display_name, osm_id, text) = self.osm_geocode(location)
-        irc.reply(f'{text}: {display_name} [ID: {osm_id}] {lat},{lon}')
+        irc.reply(f'{weather_output}')
 
-    @wrap(['something'])
-    def help(self, irc):
-        """418: I\'m a teapot"""
-
+                    
 Class = Weather
+
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

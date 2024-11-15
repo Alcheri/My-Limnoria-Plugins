@@ -54,10 +54,16 @@ Weather = conf.registerPlugin('Weather')
 
 conf.registerGroup(Weather, 'apikeys')
 
-conf.registerGlobalValue(
+conf.registerChannelValue(
+    Weather, 'googlemapsAPI', registry.String(
+        '', _("""Sets the API key for Google Maps."""), private=True)
+)
+
+conf.registerChannelValue(
     Weather, 'openweatherAPI', registry.String(
         '', _("""Sets the API key for Open Weather."""), private=True)
 )
+
 conf.registerChannelValue(
     Weather, 'enable', registry.Boolean(
         False, """Should plugin work in this channel?""")
