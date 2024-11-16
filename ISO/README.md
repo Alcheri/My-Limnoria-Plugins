@@ -4,6 +4,12 @@ Convert alpha2 country codes to country name and vice versa.
 
 convert <alpha2 code / country>
 
-**Setting up:**
+Setting up:
+==========
 
-None
+pip install iso3166
+
+Using:
+=====
+
+[prefix] country <country code | country>
