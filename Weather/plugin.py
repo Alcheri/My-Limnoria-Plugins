@@ -31,7 +31,7 @@ import json, time
 import math, re
 
 from datetime import datetime
-from functools import lru_cache
+from functools import lru_cache #Simple lightweight unbounded function cache.
 from supybot import utils, plugins, ircutils, callbacks, log
 from supybot.commands import *
 try:
@@ -69,6 +69,50 @@ def find_numbers_and_text(s):
         return numbers, text
     else:
         return 0, 0
+    
+# Function based on: https://stackoverflow.com/questions/50225907/google-maps-api-geocoding-get-address-components/50236084#50236084
+def extract_address_details(address_components):
+    """
+    extract_address_details extracts address parts from the details of the google maps api response
+
+    :param address_components: a dict representing the details['address_components'] response from the google maps api
+    :return: a dict of the address components
+    """
+    # set up the loop parameters for each component
+    count = len(address_components)
+    looplist = range(0, count)
+
+    postal_code = '-1'
+    city = ''
+
+    #loop through the indices of the address components
+    for i in looplist:
+
+        #set up the loop parameters for the component types
+        tcount = len(address_components[i]['types'])
+        tlooplist = range(0, tcount)
+        
+        #loop through the indices of the address component types
+        for t in tlooplist:
+
+            #match the type, pull the short_name from the appropriate component as a string
+            match address_components[i]['types'][t]:
+                case 'postal_town':
+                    city = str(address_components[i]['short_name'])
+                case "locality":
+                    city = str(address_components[i]['short_name'])
+                case 'administrative_area_level_1':
+                    political = str(address_components[i]['long_name'])
+                case 'country':
+                    country = str(address_components[i]['long_name'])
+                case 'postal_code':
+                    postal_code = str(address_components[i]['short_name'])
+
+    # Assemble and format the data
+    address = city + ', ' + political + ', ' + country
+
+    # Return formatted data.
+    return address, postal_code
 
 def colour(celsius):
     """Colourise temperatures"""
@@ -204,11 +248,11 @@ class Weather(callbacks.Plugin):
         day1lowC    = round(day1['temp'].get('min'))
 
         # Forecast day two
-        day2        = data['daily'][2]
-        day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
-        day2weather = day2['weather'][0].get('description')
-        day2highC   = round(day2['temp'].get('max'))
-        day2lowC    = round(day2['temp'].get('min'))
+        #day2        = data['daily'][2]
+        #day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
+        #day2weather = day2['weather'][0].get('description')
+        #day2highC   = round(day2['temp'].get('max'))
+        #day2lowC    = round(day2['temp'].get('min'))
 
         # Formatted output
         a = f'🏠 {location} :: UTC {utc} :: Lat {LAT} Lon {LON} :: {staticon} {desc} '
@@ -216,12 +260,12 @@ class Weather(callbacks.Plugin):
         c = f'| {precipico} Precip {precip}mm/h | 💦 Humidity {humid}{percent_sign} | Current {colour(temp)} '
         d = f'| Feels like {colour(feelslike)} | 🍃 Wind {wind}Km/H {arrow} '
         e = f'| 💨 Gust {gust}m/s | 👁 Visibility {vis}Km | UVI {uvi} {uvicon} '
-        f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
-        g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
+        #f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
+        #g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
 
         s = ''
 
-        seq = [a, b, c, d, e, f, g]
+        seq = [a, b, c, d, e]
 
         return((s.join(seq)))
 
@@ -272,9 +316,9 @@ class Weather(callbacks.Plugin):
         }
         return switcher.get(code, '🤷')
 
-    @lru_cache(maxsize=64, typed=False)
-    def google_maps(self, location, delay=3):
-        location = location.lower()
+    @lru_cache(maxsize=64, typed=False)    #XXX LRU caching
+    def google_maps(self, address, delay=3):
+        address = address.lower()
         apikey = self.registryValue('googlemapsAPI')
         # Missing Google Maps API Key.
         if not apikey:
@@ -282,25 +326,31 @@ class Weather(callbacks.Plugin):
                 'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
         # Adapted from James Lu's NuWeather plugin https://github.com/jlu5/
         #Base URI
-        uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}'.format(utils.web.urlquote(location), apikey)
+        uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}'.format(utils.web.urlquote(address), apikey)
         self.log.debug('Weather: using url %s (google)', uri)    
 
+        # Check if the URL is cashed
         if uri not in cache:
             cache[uri] = _contact_server_(uri)
     
         get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
-        
+
         data = json.loads(get, strict=False)
         if data['status'] != "OK":
-            raise callbacks.Error("{0} from Google Maps for location {1}".format(data['status'], location))
-              
+            raise callbacks.Error("{0} from Google Maps for location {1}".format(data['status'], address))
+    
         data         = data['results'][0]
         lat          = data['geometry']['location']['lat']
-        lon          = data['geometry']['location']['lng']
-        display_name = data['formatted_address']
+        lng          = data['geometry']['location']['lng']
         place_id     = data['place_id']
-    
-        result = (display_name, lat, lon, place_id)
+
+        display_name = ''
+
+        # Extract data from 'address_components' section of Google Maps response.
+        (display_name, postcode) = extract_address_details(data['address_components'])
+          
+        result = (display_name, lat, lng, postcode, place_id)
+        
         # Delay
         time.sleep(delay) #in seconds
 
@@ -339,12 +389,15 @@ class Weather(callbacks.Plugin):
         """Looks up <location>
         
         [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude]
+        <address>
         """
         location = location.lower()
      
-        geo_resu = self.google_maps(location, delay=0)
+        (display_name, lat, lng, postcode, place_id) = self.google_maps(location, delay=0)
 
-        irc.reply(f'From Google Maps: {geo_resu}')
+        formatted_txt = '\x02%s\x02 \x02%s\x02 [ID: %s] \x02%s\x02 \x02%s' % (display_name, postcode, place_id, lat, lng)
+
+        irc.reply(f'From Google Maps: {formatted_txt}')
 
     @wrap(['text'])
     def weather(self, irc, msg, args, location):
@@ -378,9 +431,9 @@ class Weather(callbacks.Plugin):
             if not data:
                 raise callbacks.Error("Unknown location: %s." % location)
         
-        #Google Maps result
+        # Google Maps results - formatted for readability
         results = {
-            'town'     : data[0],
+            'address'  : data[0],
             'latitude' : data[1],
             'longitude': data[2],
             'postcode' : data[3]
@@ -401,7 +454,7 @@ class Weather(callbacks.Plugin):
         except Exception as err:
             raise callbacks.Error(f'Weather: an error occurred: {err}')
 
-        weather_output = self.format_weather_output(results['town'], data)
+        weather_output = self.format_weather_output(results['address'], data)
 
         irc.reply(f'{weather_output}')
 
