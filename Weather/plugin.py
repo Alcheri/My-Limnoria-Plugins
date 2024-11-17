@@ -85,33 +85,33 @@ def extract_address_details(address_components):
     postal_code = '-1'
     city = ''
 
-    #loop through the indices of the address components
+    # loop through the indices of the address components
     for i in looplist:
 
-        #set up the loop parameters for the component types
+        # set up the loop parameters for the component types
         tcount = len(address_components[i]['types'])
         tlooplist = range(0, tcount)
         
-        #loop through the indices of the address component types
+        # loop through the indices of the address component types
         for t in tlooplist:
 
-            #match the type, pull the short_name from the appropriate component as a string
+            # match the type, pull the short_name from the appropriate component as a string
             match address_components[i]['types'][t]:
                 case 'postal_town':
                     city = str(address_components[i]['short_name'])
                 case "locality":
                     city = str(address_components[i]['short_name'])
                 case 'administrative_area_level_1':
-                    political = str(address_components[i]['long_name'])
+                    political = str(address_components[i]['short_name'])
                 case 'country':
-                    country = str(address_components[i]['long_name'])
+                    country = str(address_components[i]['short_name'])
                 case 'postal_code':
                     postal_code = str(address_components[i]['short_name'])
 
-    # Assemble and format the data
+    # Assemble and format the address
     address = city + ', ' + political + ', ' + country
 
-    # Return formatted data.
+    # Return formatted address.
     return address, postal_code
 
 def colour(celsius):
