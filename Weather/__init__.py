@@ -33,8 +33,8 @@ Weather: A simple weather plugin.
 """
 
 import sys
-if sys.version_info <= (3, 10):
-    raise RuntimeError("This plugin requires Python 3.10 or above.")
+if sys.version_info <= (3, 9):
+    raise RuntimeError("This plugin requires Python 3.9 or above.")
 import supybot
 from supybot import world
 
