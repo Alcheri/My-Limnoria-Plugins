@@ -13,6 +13,8 @@ Subscription: [One Call API 3.0](https://openweathermap.org/api/one-call-3)
 Google Maps API gathers data requiring a (free?) subscription.\
 Subscription: [Google Maps API](https://developers.google.com/maps)
 
+* Google gives each Google Maps account $200/month of free credit, which is equivalent to 40,000 addresses geocoded per month.
+
 Setting up:
 ==========
 
