@@ -31,9 +31,9 @@ Configure your bot:
 Using:
 =====
 
-[prefix] weather [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude]\
-[prefix] google&nbsp; [city <(Alpha-2) country code>] -- To get latitude and longitude of a city/town.
-[prefix] setlocation [nick <location>] -- Sets the location for your current ident@host to <location>
+[prefix] weather [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude] \<address\>\
+[prefix] google&nbsp; [city <(Alpha-2) country code>] -- To get latitude and longitude of a city/town.\
+[prefix] setlocation [nick \<location\>] -- Sets the location for your current ident@host to \<location\>\
 [prefix] help -- Plugin help. Accepts no arguments.
 
 
