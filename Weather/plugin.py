@@ -28,7 +28,11 @@
 
 ###
 import json, time
-import math, re
+import math
+import pickle
+
+import supybot.world as world
+import supybot.conf as conf
 
 from datetime import datetime
 from functools import lru_cache #Simple lightweight unbounded function cache.
@@ -52,24 +56,16 @@ quotation_mark = u'\N{QUOTATION MARK}'
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0'
 }
-    
+
+filename = conf.supybot.directories.data.dirize('Weather.db')
+
 cache = dict()
 
 def _contact_server_(uri):
     response = utils.web.getUrl(uri)
 
     return response
-
-def find_numbers_and_text(s):
-    # Find all numbers (integers and decimals)
-    numbers = re.findall(r'\d+\.\d+|\d+', s)
-    # Find all text (words)
-    text = re.findall(r'[a-zA-Z]+', s)
-    if numbers and text:
-        return numbers, text
-    else:
-        return 0, 0
-    
+   
 # Function based on: https://stackoverflow.com/questions/50225907/google-maps-api-geocoding-get-address-components/50236084#50236084
 def extract_address_details(address_components):
     """
@@ -83,7 +79,6 @@ def extract_address_details(address_components):
     looplist = range(0, count)
 
     postal_code = '-1'
-    city = ''
 
     # loop through the indices of the address components
     for i in looplist:
@@ -106,12 +101,16 @@ def extract_address_details(address_components):
                 case 'country':
                     country = str(address_components[i]['short_name'])
                 case 'postal_code':
-                    postal_code = str(address_components[i]['short_name'])
+                    postal_code = str(address_components[i]['short_name'])  
+    
+    # assemble and format the address
+    try:
+        address = city + ', ' + political + ', ' + country
+    except Exception as err:
+        log.error(f'extract_address_details: {err}')
+        raise callbacks.Error("404 from Google Maps for location.")
 
-    # Assemble and format the address
-    address = city + ', ' + political + ', ' + country
-
-    # Return formatted address.
+    # return formatted address.
     return address, postal_code
 
 def colour(celsius):
@@ -204,6 +203,32 @@ class Weather(callbacks.Plugin):
 
         self.__parent = super(Weather, self)
         self.__parent.__init__(irc)
+        self.db = {}
+        self._loadDb()
+        world.flushers.append(self._flushDb)
+
+    def _loadDb(self):
+        """Loads the (flatfile) database mapping ident@hosts to location."""
+
+        try:
+            with open(filename, 'rb') as f:
+                self.db = pickle.load(f)
+        except Exception as err:
+            self.log.debug(f'Weather: Unable to load database: {err}')
+
+    def _flushDb(self):
+        """Flushes the (flatfile) database mapping ident@hosts to location."""
+
+        try:
+            with open(filename, 'wb') as f:
+                pickle.dump(self.db, f, 2)
+        except Exception as err:
+            self.log.warning(f'Weather: Unable to write database: {err}')
+
+    def die(self):
+        self._flushDb()
+        world.flushers.remove(self._flushDb)
+        self.__parent.die()
 
     def format_weather_output(self, location, data):
         """
@@ -240,19 +265,19 @@ class Weather(callbacks.Plugin):
         except KeyError:
             gust = 0
 
-        # Forecast day one
+        # forecast day one
         day1        = data['daily'][1]
         day1name    = datetime.fromtimestamp(day1['dt']).strftime('%A')
         day1weather = day1['weather'][0].get('description')
         day1highC   = round(day1['temp'].get('max'))
         day1lowC    = round(day1['temp'].get('min'))
 
-        # Forecast day two
-        #day2        = data['daily'][2]
-        #day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
-        #day2weather = day2['weather'][0].get('description')
-        #day2highC   = round(day2['temp'].get('max'))
-        #day2lowC    = round(day2['temp'].get('min'))
+        # forecast day two
+        day2        = data['daily'][2]
+        day2name    = datetime.fromtimestamp(day2['dt']).strftime('%A')
+        day2weather = day2['weather'][0].get('description')
+        day2highC   = round(day2['temp'].get('max'))
+        day2lowC    = round(day2['temp'].get('min'))
 
         # Formatted output
         a = f'🏠 {location} :: UTC {utc} :: Lat {LAT} Lon {LON} :: {staticon} {desc} '
@@ -260,12 +285,12 @@ class Weather(callbacks.Plugin):
         c = f'| {precipico} Precip {precip}mm/h | 💦 Humidity {humid}{percent_sign} | Current {colour(temp)} '
         d = f'| Feels like {colour(feelslike)} | 🍃 Wind {wind}Km/H {arrow} '
         e = f'| 💨 Gust {gust}m/s | 👁 Visibility {vis}Km | UVI {uvi} {uvicon} '
-        #f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
-        #g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
+        f = f'| {day1name}: {day1weather} Max {colour(day1highC)} Min {colour(day1lowC)} '
+        g = f'| {day2name}: {day2weather} Max {colour(day2highC)} Min {colour(day2lowC)}.'
 
         s = ''
 
-        seq = [a, b, c, d, e]
+        seq = [a, b, c, d, e, f, g]
 
         return((s.join(seq)))
 
@@ -318,45 +343,47 @@ class Weather(callbacks.Plugin):
 
     @lru_cache(maxsize=64, typed=False)    #XXX LRU caching
     def google_maps(self, address, delay=3):
-        address = address.lower()
+        """Googgle Maps API"""
         apikey = self.registryValue('googlemapsAPI')
-        # Missing Google Maps API Key.
+        # missing Google Maps API Key.
         if not apikey:
             raise callbacks.Error( \
                 'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
-        # Adapted from James Lu's NuWeather plugin https://github.com/jlu5/
-        #Base URI
-        uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}'.format(utils.web.urlquote(address), apikey)
+        # adapted from James Lu's NuWeather plugin https://github.com/jlu5/
+        # base URL
+        uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}' \
+            .format(utils.web.urlquote(address), apikey)
         self.log.debug('Weather: using url %s (google)', uri)    
 
-        # Check if the URL is cashed
+        # check if the URL is cashed
         if uri not in cache:
             cache[uri] = _contact_server_(uri)
     
         get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
 
         data = json.loads(get, strict=False)
-        if data['status'] != "OK":
-            raise callbacks.Error("{0} from Google Maps for location {1}".format(data['status'], address))
+        if data['status'] != 'OK':
+            raise callbacks.Error('{0} from Google Maps for location {1}' \
+                .format(data['status'], address))
     
         data         = data['results'][0]
         lat          = data['geometry']['location']['lat']
         lng          = data['geometry']['location']['lng']
         place_id     = data['place_id']
 
-        display_name = ''
+        # display_name = ''
 
-        # Extract data from 'address_components' section of Google Maps response.
+        # extract data from 'address_components' section of Google Maps response.
         (display_name, postcode) = extract_address_details(data['address_components'])
           
         result = (display_name, lat, lng, postcode, place_id)
         
-        # Delay
+        # delay
         time.sleep(delay) #in seconds
 
         return result
 
-    # Adapted from https://stackoverflow.com/a/7490772
+    # adapted from https://stackoverflow.com/a/7490772
     @staticmethod
     def _get_wind_direction(degrees):
         """Calculate wind direction"""
@@ -390,48 +417,62 @@ class Weather(callbacks.Plugin):
         
         [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude]
         <address>
-        """
-        location = location.lower()
-     
+        """    
         (display_name, lat, lng, postcode, place_id) = self.google_maps(location, delay=0)
 
-        formatted_txt = '\x02%s\x02 \x02%s\x02 [ID: %s] \x02%s\x02 \x02%s' % (display_name, postcode, place_id, lat, lng)
+        formatted_txt = '\x02%s\x02 \x02%s\x02 [ID: %s] \x02%s\x02 \x02%s' \
+            % (display_name, postcode, place_id, lat, lng)
 
         irc.reply(f'From Google Maps: {formatted_txt}')
 
-    @wrap(['text'])
-    def weather(self, irc, msg, args, location):
+    @wrap([getopts({'nick': 'nick'}), additional('text')])
+    def weather(self, irc, msg, args, optlist, location):
         """
+        [--nick <nick>] [<location>]
+        [setlocation <nick>] [location]
+
         Get weather information for a town or city for the current day.
 
-        [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude]
+        [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude] <address>
 
-        I.E. `weather` Ballarat or Ballarat AU OR 3350 AU or `weather` -37.5303188, 143.8297033
+        I.E. 'weather' Ballarat or Ballarat AU OR 3350 AU or 'weather' -37.5303188, 143.8297033
 
-         | `google` [city <(Alpha-2) country code>] to get latitude and longitude of a city/town.
+         | 'google' [city <(Alpha-2) country code>] to get latitude and longitude of a city/town.
         """
-        # Not 'enabled' in #channel.
+        # not 'enabled' in #channel.
         if not self.registryValue('enable', msg.channel, irc.network):
             return
 
         apikey = self.registryValue('openweatherAPI')
-        # Missing OpenWeatherMap API Key.
+        # missing OpenWeatherMap API Key.
         if not apikey:
             raise callbacks.Error( \
                 'Please configure the OpenWeatherMap API key via config plugins.Weather.openweatherAPI [your_key_here]')
-                 
-        location = location.lower()
 
-        # Get co-ordinates from a postcode and send to Google Maps.
-        (numbers, text) = find_numbers_and_text(location)
-        if numbers and text:
-           data = self.google_maps(location, delay=0)
-        else: #Get location from Google Maps.
-            data = self.google_maps(location, delay=0)
-            if not data:
-                raise callbacks.Error("Unknown location: %s." % location)
+        optlist = dict(optlist)
+        if not location:
+            try:
+                if 'nick' in optlist:
+                    host = irc.state.nickToHostmask(optlist['nick'])
+                else:
+                    host = msg.prefix
+                ih = host.split('!')[1]
+                location = self.db[ih]
+            except KeyError:
+                irc.error(
+                    'No location for %s is set. Use the \'setlocation\' command '
+                    'to set a location for your current hostmask, or call \'weather\' '
+                    'with <location> as an argument.'
+                    % ircutils.bold('*!' + ih),
+                    Raise=True,
+                )
         
-        # Google Maps results - formatted for readability
+        # first, grab lat and long for user location.
+        data = self.google_maps(location, delay=0)
+        if not data: # Left in as a just_in_case.
+            raise callbacks.Error("Unknown location: %s." % location)
+        
+        # google maps results - formatted for readability
         results = {
             'address'  : data[0],
             'latitude' : data[1],
@@ -439,7 +480,7 @@ class Weather(callbacks.Plugin):
             'postcode' : data[3]
         }
 
-        # Base URI for Openweathermap
+        # base URL for Openweathermap
         uri = 'https://api.openweathermap.org/data/3.0/onecall?' + utils.web.urlencode({
             'lat':     results['latitude'],
             'lon':     results['longitude'],
@@ -452,7 +493,8 @@ class Weather(callbacks.Plugin):
             get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
             data = json.loads(get, strict=False)
         except Exception as err:
-            raise callbacks.Error(f'Weather: an error occurred: {err}')
+            self.log.error(f'Weather: {err}')
+            raise callbacks.Error(f'Weather: {err}')
 
         weather_output = self.format_weather_output(results['address'], data)
 
@@ -461,7 +503,27 @@ class Weather(callbacks.Plugin):
     @wrap(['something'])
     def help(self, irc):
         """418: I\'m a teapot"""
-                   
+
+    @wrap(['text'])
+    def setlocation(self, irc, msg, args, location):
+        """<location>
+
+        Sets the location for your current ident@host to <location>."""
+        ih = msg.prefix.split('!')[1]
+        self.db[ih] = location
+        irc.replySuccess()
+
+    def unset(self, irc, msg, args):
+        """takes no arguments.
+
+        Unsets the location for your current ident@host."""
+        ih = msg.prefix.split('!')[1]
+        try:
+            del self.db[ih]
+            irc.replySuccess()
+        except KeyError:
+            irc.error('No entry for %s exists.' % ircutils.bold('*!' + ih), Raise=True)
+
 Class = Weather
 
 
