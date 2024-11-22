@@ -1,11 +1,9 @@
 sudo: false
 language: python
 python:
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "3.8"
   - "3.9"
+  - "3.10"
+  - "3.11"
 
 install:
     - pip3 install -vr requirements.txt
@@ -21,9 +19,7 @@ notifications:
 
 matrix:
     allow_failures:
-        - python: "3.5"
-        - python: "3.6"
-        - python: "3.7"
-        - python: "3.8"
-        - python: "3.9"
+        - "3.9"
+        - "3.10"
+        - "3.11"
     fast_finish: true
