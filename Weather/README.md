@@ -29,8 +29,8 @@ Using:
 =====
 
 [prefix] weather [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] \<address\>\
-[prefix] google&nbsp; [city <(Alpha-2) country code>] [latitude, longitude] -- To get latitude and longitude of a city/town.\
-[prefix] set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<location\> -- Sets the location for your current ident@host to \<location\>\
+[prefix] google&nbsp; [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude] <address>\
+[prefix] set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<location\> -- Sets your current ident@host to \<location\>\
 [prefix] help -- Plugin help. Accepts no arguments.
 
 
