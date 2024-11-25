@@ -29,9 +29,9 @@ Using:
 =====
 
 [prefix] weather [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] \<address\>\
-[prefix] google&nbsp; [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude] <address>\
+[prefix] google&nbsp; [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude] \<address\>\
 [prefix] set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<location\> -- Sets your current ident@host to \<location\>\
-[prefix] help -- Plugin help. Accepts no arguments.
+[prefix] help -- Plugin help - accepts no arguments.
 
 
 
