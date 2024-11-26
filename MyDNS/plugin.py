@@ -28,12 +28,19 @@
 
 import json    # JavaScript Object Notation
 import socket  # Low-level networking interface
+
 #XXX For Python 3.4 and later
 # HTTP client for Python
-import urllib3
+try:
+    import urllib3
+except ImportError as e:
+    raise Exception(f'Cannot import module: {e}')
+
 from urllib3.exceptions import HTTPError
+
 # URL handling module for python
 from urllib.parse import urlparse
+
 # Validate and categorize the IP address according to their types
 # (IPv4 or IPv6)
 import ipaddress
