@@ -251,6 +251,15 @@ class Weather(callbacks.Plugin):
             icon = '🟣'
         return icon
 
+    def format_weather_results(self, location, data, forecast=False):
+        """Gather the weather data and format."""
+        if not forecast:
+            output = self.get_current_cond(location, data)          
+        else:
+            output = self.get_forecast(location, data)
+
+        return output
+
     def get_current_cond(self, location, data):
         """Grab current weather conditions"""
         output = []
@@ -312,7 +321,7 @@ class Weather(callbacks.Plugin):
             forecast.append(f"MAX {colour(round(data['daily'][count]['temp'].get('max')))}")
             output.append(''.join(forecast))
             count += 1
-        log.info(key)    
+    
         return ('').join(output)
 
     # adapted from https://openweathermap.org/weather-conditions#How-to-get-icon-URL
@@ -380,6 +389,7 @@ class Weather(callbacks.Plugin):
         if not apikey:
             raise callbacks.Error( \
                 'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
+        
         # adapted from James Lu's NuWeather plugin https://github.com/jlu5/
         # base URL
         uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}' \
@@ -460,7 +470,7 @@ class Weather(callbacks.Plugin):
                     % ircutils.bold('*!' + ident_host),
                     Raise=True,
                 )
-        
+
         # grab latitude and longitude for user location.
         data = self.google_maps(location, delay=0)
 
@@ -480,7 +490,7 @@ class Weather(callbacks.Plugin):
             'appid':   apikey,
             'units':   'metric'
         })
-        self.log.debug('Weather: using url %s (openweathermap)', uri)
+        self.log.debug('Weather: using uri %s (openweathermap)', uri)
 
         try:
             get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
@@ -488,17 +498,25 @@ class Weather(callbacks.Plugin):
         except Exception as err:
             self.log.error(f'Weather: {err}')
             raise callbacks.Error(f'Weather: {err}')
-                   
-        if 'forecast' in optlist:
-            weather_output = self.get_forecast(results['address'], data)
-        else:
-            weather_output = self.get_current_cond(results['address'], data)
+
+        weather_output = self.format_weather_results(results['address'], data, forecast='forecast' in optlist)
 
         irc.reply(f'{weather_output}')
 
     @wrap(['something'])
     def help(self, irc):
-        """418: I\'m a teapot"""
+        """
+        [--user <nick>] [<location>]
+        [set <nick>] [location]
+
+        Get the current weather information for a town, city or address.
+
+        [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] <address>
+
+        I.E. 'weather' Ballarat or Ballarat AU OR 3350 AU or 'weather' 38.9071923 -77.036870
+
+         | 'google' [city <(Alpha-2) country code>] to get latitude and longitude of a city/town.
+        """
 
     @wrap(['text'])
     def set(self, irc, msg, args, location):
