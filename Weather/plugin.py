@@ -38,7 +38,7 @@ import supybot.conf as conf
 
 from datetime import datetime
 from functools import lru_cache #Simple lightweight unbounded function cache.
-from supybot import utils, plugins, ircutils, callbacks, log
+from supybot import utils, ircutils, callbacks, log
 from supybot.commands import *
 try:
     from supybot.i18n import PluginInternationalization
@@ -67,53 +67,6 @@ def _contact_server_(uri):
     response = utils.web.getUrl(uri)
 
     return response
-
-# Function based on: https://stackoverflow.com/questions/50225907/google-maps-api-geocoding-get-address-components/50236084#50236084
-def extract_address_details(address_components, location):
-    """
-    extract_address_details extracts address parts from the details of the google maps api response
-
-    :param address_components: a dict representing the details['address_components'] response from the google maps api
-    :return: a dict of the address components
-    """
-    # set up the loop parameters for each component
-    count = len(address_components)
-    looplist = range(0, count)
-
-    postal_code = '-1'
-
-    # loop through the indices of the address components
-    for i in looplist:
-
-        # set up the loop parameters for the component types
-        tcount = len(address_components[i]['types'])
-        tlooplist = range(0, tcount)
-        
-        # loop through the indices of the address component types
-        for t in tlooplist:
-
-            # match the type, pull the short_name from the appropriate component as a string
-            match address_components[i]['types'][t]:
-                case 'postal_town':
-                    city = str(address_components[i]['short_name'])
-                case "locality":
-                    city = str(address_components[i]['short_name'])
-                case 'administrative_area_level_1':
-                    political = str(address_components[i]['short_name'])
-                case 'country':
-                    country = str(address_components[i]['short_name'])
-                case 'postal_code':
-                    postal_code = str(address_components[i]['short_name'])  
-    
-    # assemble and format the address
-    try:
-        address = city + ', ' + political + ', ' + country
-    except Exception as err:
-        log.error(f'extract_address_details: {err}')
-        raise callbacks.Error(f'404 from Google Maps for location {location}')
-
-    # return formatted address.
-    return address, postal_code
 
 def colour(celsius):
     """Colourise temperatures"""
@@ -194,6 +147,53 @@ def dd2dms(longitude, latitude):
     )
     return (x, y)
 
+# Function based on: https://stackoverflow.com/questions/50225907/google-maps-api-geocoding-get-address-components/50236084#50236084
+def extract_address_details(address_components, location):
+    """
+    extract_address_details extracts address parts from the details of the google maps api response
+
+    :param address_components: a dict representing the details['address_components'] response from the google maps api
+    :return: a dict of the address components
+    """
+    # set up the loop parameters for each component
+    count = len(address_components)
+    looplist = range(0, count)
+
+    postal_code = '-1'
+
+    # loop through the indices of the address components
+    for i in looplist:
+
+        # set up the loop parameters for the component types
+        tcount = len(address_components[i]['types'])
+        tlooplist = range(0, tcount)
+        
+        # loop through the indices of the address component types
+        for t in tlooplist:
+
+            # match the type, pull the short_name from the appropriate component as a string
+            match address_components[i]['types'][t]:
+                case 'postal_town':
+                    city = str(address_components[i]['short_name'])
+                case "locality":
+                    city = str(address_components[i]['short_name'])
+                case 'administrative_area_level_1':
+                    political = str(address_components[i]['short_name'])
+                case 'country':
+                    country = str(address_components[i]['short_name'])
+                case 'postal_code':
+                    postal_code = str(address_components[i]['short_name'])  
+    
+    # assemble and format the address
+    try:
+        address = city + ', ' + political + ', ' + country
+    except Exception as err:
+        log.error(f'extract_address_details: {err}')
+        raise callbacks.Error(f'404 from Google Maps for location {location}')
+
+    # return formatted address.
+    return address, postal_code
+
 class Weather(callbacks.Plugin):
     """
     A simple Weather plugin for Limnoria
@@ -234,7 +234,7 @@ class Weather(callbacks.Plugin):
     @staticmethod
     def format_uvi_icon(uvi):
         """
-        Diplays a coloured icon relevant to the UV Index meter.
+        Displays a coloured icon relevant to the UV Index meter.
         Low: Green Moderate: Yellow High: Orange Very High: Red
         Extreme: Violet 🥵
         """
@@ -256,7 +256,7 @@ class Weather(callbacks.Plugin):
         if not forecast:
             output = self.get_current_cond(location, data)          
         else:
-            output = self.get_forecast(location, data)
+            output = self.get_forecast(location, data['daily'])
 
         return output
 
@@ -264,7 +264,7 @@ class Weather(callbacks.Plugin):
         """Grab current weather conditions"""
         output = []
         output.append(f'{location} :: ')
-
+        
         current    = data['current']
         icon       = current['weather'][0].get('icon')
         staticon   = self.get_status_icon(icon)
@@ -291,7 +291,7 @@ class Weather(callbacks.Plugin):
         desc   = current['weather'][0].get('description')
         wind   = round(current['wind_speed'])
         try:
-            gust = round(current['wind_gust'])
+            gust = round(data['wind_gust'])
         except KeyError:
             gust = 0
         output.append(f'UTC {utc} :: Lat {LAT} Lon {LON} :: {staticon} {desc} ')
@@ -310,15 +310,15 @@ class Weather(callbacks.Plugin):
         index = 4
         count = 0
 
-        for key in data:
+        for i in data:
             if count >= index and index != 0:
                 break
             forecast = []
     
-            forecast.append(f" :: {datetime.fromtimestamp(data['daily'][count]['dt']).strftime('%A')}: ")
-            forecast.append(f"{data['daily'][count]['weather'][0]['description']} ")
-            forecast.append(f"MIN {colour(round(data['daily'][count]['temp'].get('min')))} ")
-            forecast.append(f"MAX {colour(round(data['daily'][count]['temp'].get('max')))}")
+            forecast.append(f" :: {datetime.fromtimestamp(data[count]['dt']).strftime('%A')}: ")
+            forecast.append(f"{data[count]['weather'][0]['description']} ")
+            forecast.append(f"MIN {colour(round(data[count]['temp'].get('min')))} ")
+            forecast.append(f"MAX {colour(round(data[count]['temp'].get('max')))}")
             output.append(''.join(forecast))
             count += 1
     
@@ -388,13 +388,13 @@ class Weather(callbacks.Plugin):
         # missing Google Maps API Key.
         if not apikey:
             raise callbacks.Error( \
-                'Please configure the Google Maps API key via config plugins.Weather.googlemapsAPI [your_key_here]')
+                'Please configure the Google Maps API key via plugins.Weather.googlemapsAPI [your_key_here]')
         
         # adapted from James Lu's NuWeather plugin https://github.com/jlu5/
         # base URL
         uri = 'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}' \
             .format(utils.web.urlquote(address), apikey)
-        self.log.debug('Weather: using url %s (googlemaps)', uri)    
+        self.log.debug(f'Weather: using url {uri} (googlemaps)')    
 
         # check if the URL is cashed
         if uri not in cache:
@@ -428,7 +428,8 @@ class Weather(callbacks.Plugin):
         
         [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] [latitude, longitude]
         <address>
-        """    
+        """
+        location = location.lower()    
         (display_name, lat, lng, postcode, place_id) = self.google_maps(location, delay=0)
 
         formatted_txt = '\x02%s\x02 \x02%s\x02 [ID: %s] \x02%s\x02 \x02%s' \
@@ -444,12 +445,12 @@ class Weather(callbacks.Plugin):
         # not 'enabled' in #channel.
         if not self.registryValue('enable', msg.channel, irc.network):
             return
-        
+
         apikey = self.registryValue('openweatherAPI')
         # missing OpenWeatherMap API Key.
         if not apikey:
             raise callbacks.Error( \
-                'Please configure the OpenWeatherMap API key via config plugins.Weather.openweatherAPI [your_key_here]')
+                'Please configure the OpenWeatherMap API key via plugins.Weather.openweatherAPI [your_key_here]')
 
         optlist = dict(optlist)
 
@@ -470,6 +471,7 @@ class Weather(callbacks.Plugin):
                     % ircutils.bold('*!' + ident_host),
                     Raise=True,
                 )
+        location = location.lower()
 
         # grab latitude and longitude for user location.
         data = self.google_maps(location, delay=0)
@@ -490,7 +492,7 @@ class Weather(callbacks.Plugin):
             'appid':   apikey,
             'units':   'metric'
         })
-        self.log.debug('Weather: using uri %s (openweathermap)', uri)
+        self.log.debug(f'Weather: using uri {uri} (openweathermap)')
 
         try:
             get = utils.web.getUrl(uri, headers=headers).decode('utf-8')
@@ -504,7 +506,7 @@ class Weather(callbacks.Plugin):
         irc.reply(f'{weather_output}')
 
     @wrap(['something'])
-    def help(self, irc):
+    def help(self, irc, msg, args):
         """
         [--user <nick>] [<location>]
         [set <nick>] [location]
@@ -523,6 +525,7 @@ class Weather(callbacks.Plugin):
         """<location>
         
         Sets the location for your current ident@host."""
+        location = location.lower()
         ident_host = msg.prefix.split('!')[1]
         self.db[ident_host] = location
         irc.replySuccess()
