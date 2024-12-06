@@ -51,8 +51,6 @@ Weatherstack = conf.registerPlugin('Weatherstack')
 # conf.registerGlobalValue(DALnet, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
 
-conf.registerGroup(Weatherstack, 'apikeys')
-
 conf.registerGlobalValue(
     Weatherstack, 'weatherstackAPI', registry.String(
         '', _("""Sets the API key for Weatherstack."""), private=True)
