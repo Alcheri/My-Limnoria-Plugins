@@ -11,3 +11,4 @@ test-logs
 *.komodoproject
 README.txt
 limnoria.code-workspace
+.env
