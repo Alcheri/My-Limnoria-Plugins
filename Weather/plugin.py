@@ -435,7 +435,7 @@ class Weather(callbacks.Plugin):
         formatted_txt = '\x02%s\x02 \x02%s\x02 [ID: %s] \x02%s\x02 \x02%s' \
             % (display_name, postcode, place_id, lat, lng)
 
-        irc.reply(f'From Google Maps: {formatted_txt}')
+        irc.reply(f'From Google Maps: {formatted_txt}', prefixNick=False)
 
     @wrap([getopts({'user': 'nick', 'forecast': ''}), additional('text')])
     def weather(self, irc, msg, args, optlist, location):
@@ -503,7 +503,7 @@ class Weather(callbacks.Plugin):
 
         weather_output = self.format_weather_results(results['address'], data, forecast='forecast' in optlist)
 
-        irc.reply(f'{weather_output}')
+        irc.reply(f'{weather_output}', prefixNick=False)
 
     @wrap(['something'])
     def help(self, irc, msg, args):

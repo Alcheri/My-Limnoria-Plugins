@@ -52,12 +52,14 @@ Weather = conf.registerPlugin('Weather')
 # conf.registerGlobalValue(DALnet, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
 
-conf.registerChannelValue(
+conf.registerGroup(Weather, 'apikeys')
+
+conf.registerGlobalValue(
     Weather, 'googlemapsAPI', registry.String(
         '', _("""Sets the API key for Google Maps."""), private=True)
 )
 
-conf.registerChannelValue(
+conf.registerGlobalValue(
     Weather, 'openweatherAPI', registry.String(
         '', _("""Sets the API key for Open Weather."""), private=True)
 )
