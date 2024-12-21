@@ -27,12 +27,20 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 ###
+import json
 import math
 import re
 import requests
 
+# PyEphem astronomy library for Python
 try:
     import ephem
+except ImportError as ie:
+    raise Exception(f'Cannot import module: {ie}')
+
+# Python library for high performance off-line querying of GPS coordinates, region name and municipality name from postal codes
+try:
+    import pgeocode
 except ImportError as ie:
     raise Exception(f'Cannot import module: {ie}')
 
@@ -45,9 +53,12 @@ import supybot.log as log
 from supybot.commands import *
 
 try:
-    import pgeocode
-except ImportError as ie:
-    raise Exception(f"Cannot import module: {ie}")
+    from supybot.i18n import PluginInternationalization
+    _ = PluginInternationalization('Weatherstack')
+except ImportError:
+    # Placeholder that allows to run the plugin on a bot
+    # without the i18n module
+    _ = lambda x: x
 
 #XXX Unicode symbol (https://en.wikipedia.org/wiki/List_of_Unicode_characters#Latin-1_Supplement)
 apostrophe     = u'\N{APOSTROPHE}'
@@ -82,6 +93,9 @@ def colour(celsius):
     return ircutils.mircColor(string, colour)
 
 def day(lat, lon):
+    """
+    Compute the position of the sun. Is it daytime or nighttime?
+    """
     home      = ephem.Observer()
     home.lat  = ephem.degrees(lat)           # str() Latitude
     home.lon  = ephem.degrees(lon)           # str() Longitude
@@ -180,8 +194,8 @@ class Weatherstack(callbacks.Plugin):
         """
         try:
             location = response['location']
-        except KeyError:
-            raise callbacks.Error('404: city not found')
+        except KeyError as e:
+            raise callbacks.Error(f'{e} : city not found')
 
         current   = response['current']
 
@@ -423,7 +437,7 @@ class Weatherstack(callbacks.Plugin):
             api_response = api_result.json()  # Data collection
 
             # Print the weather output
-            irc.reply(self.format_weather_output(api_response))
+            irc.reply(self.format_weather_output(api_response), prefixNick=False)
 
     @wrap(["something"])
     def help(self, irc):
