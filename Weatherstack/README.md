@@ -1,6 +1,6 @@
 # WeatherStack
 
-![Python versions](https://img.shields.io/badge/Python-version-blue) ![](https://img.shields.io/badge/3.6%2C%203.7%2C%203.8%2C%203.9-blue.svg)
+![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11-blue.svg)
 
 A plugin for Limnoria that uses the WeatherStack API. All output is in Metric.\
 The weather output is for the current date in a location ONLY!\

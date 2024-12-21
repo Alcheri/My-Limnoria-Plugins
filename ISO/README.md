@@ -1,15 +1,15 @@
-![Python versions](https://img.shields.io/badge/Python-version-blue) ![](https://img.shields.io/badge/3.6%2C%203.7%2C%203.8%2C%203.9-blue.svg)
+# ISO Plugin
+
+![Python versions](https://img.shields.io/badge/Python-3.9%2C%203.10%2C%203.11-blue.svg)
 
 Convert alpha2 country codes to country name and vice versa.
 
-convert <alpha2 code / country>
+convert [alpha2 code / country]
 
-Setting up:
-==========
+## Setting up
 
 pip install iso3166
 
-Using:
-=====
+## Using
 
-[prefix] country <country code | country>
+[prefix] country [country code | country]
