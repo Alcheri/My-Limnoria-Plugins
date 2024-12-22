@@ -30,3 +30,5 @@ Subscription: [Google Maps API](https://developers.google.com/maps)
 [prefix] google [city (Alpha-2 country code)] [postcode, (Alpha-2 country code)] [latitude, longitude] [address]\
 [prefix] set [location] -- Sets your current ident@host to [location]\
 [prefix] help -- Plugin help - accepts no arguments.
+
+<p align="center">Copyright © MMXXIV, Barry Suridge</p>

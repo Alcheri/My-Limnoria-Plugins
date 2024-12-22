@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2021, Barry Suridge
+# Copyright © MMXXIV, Barry Suridge
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ import supybot
 from supybot import world
 
 # Use this for the version of this plugin.
-__version__ = "15112024"
+__version__ = "23122024"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author('Barry Suridge', 'Alcheri',
@@ -54,10 +54,13 @@ __url__ = 'https://github.com/Alcheri/Plugins/tree/master/Weather'
 
 from . import config
 from . import plugin
+from . import config
+from . import plugin
 from importlib import reload
 # In case we're being reloaded.
 reload(config)
 reload(plugin)
+
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
 
