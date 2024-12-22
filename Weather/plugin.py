@@ -15,7 +15,6 @@ import asyncio
 import supybot.world as world
 import supybot.conf as conf
 from datetime import datetime, timezone
-from functools import lru_cache
 from supybot import utils, ircutils, callbacks, log
 from supybot.commands import *
 
@@ -95,7 +94,6 @@ class Weather(callbacks.Plugin):
         string = f"{c}{DEGREE_SIGN}C"
         return ircutils.mircColor(string, colour)
 
-    @lru_cache(maxsize=64)
     def dd2dms(self, longitude, latitude):
         """Convert decimal degrees to degrees, minutes, and seconds."""
         def convert(coord):
@@ -176,8 +174,8 @@ class Weather(callbacks.Plugin):
         formatted_data.append(f"{location} (Lat: {lat_dms}, Lon: {lon_dms})")
 
         # Current conditions
-        temp = self.format_temperature(current['temp'])
-        feels_like = self.format_temperature(current['feels_like'])
+        temp = self.format_temperature(round(current['temp']))
+        feels_like = self.format_temperature(round(current['feels_like']))
         desc = current['weather'][0]['description'].capitalize()
         humidity = f"Humidity: {current['humidity']}{PERCENT_SIGN}"
         wind_speed = f"Wind: {current['wind_speed']} m/s"
@@ -194,8 +192,8 @@ class Weather(callbacks.Plugin):
         for day in daily[:5]:  # Limit to the next 5 days
             date = datetime.fromtimestamp(day['dt'], tz=timezone.utc).strftime('%A')
             desc = day['weather'][0]['description'].capitalize()
-            min_temp = self.format_temperature(day['temp']['min'])
-            max_temp = self.format_temperature(day['temp']['max'])
+            min_temp = self.format_temperature(round(day['temp']['min']))
+            max_temp = self.format_temperature(round(day['temp']['max']))
             formatted_data.append(f"{date}: {desc}, Min: {min_temp}, Max: {max_temp}")
 
         return ' | '.join(formatted_data)
