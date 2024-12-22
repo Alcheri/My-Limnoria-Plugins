@@ -14,5 +14,5 @@ This is a straightforward (simple) English Dictionary plugin for Limnoria.
 **Note:**
 
 If Limnoria's Dict module is loaded then, unload it `@unload dict`
-
+<br/><br/>
 <p align="center">Copyright © MMXXIV, Barry Suridge</p>
