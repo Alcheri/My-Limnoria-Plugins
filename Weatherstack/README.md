@@ -24,6 +24,6 @@ Get an API key: [positionstack](https://positionstack.com/)
 ## Configure your bot
 
 * /msg yourbot load Weatherstack
-* /msg yourbot `config plugins.Weatherstack.weatherstackAPI 99024af53ccea7605e269764abe7d557`
-* /msg yourbot `config plugins.Weatherstack.positionstackAPI e7226bdca330b77866a4f90fb7af824b`
+* /msg yourbot `config plugins.Weatherstack.weatherstackAPI [Your_API_KEY]`
+* /msg yourbot `config plugins.Weatherstack.positionstackAPI [Your_API_KEY]`
 * /msg yourbot `config channel #channel plugins.Weatherstack.enable True or False` (On or Off)
