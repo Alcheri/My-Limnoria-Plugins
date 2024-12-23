@@ -3,7 +3,10 @@
 # All rights reserved.
 #
 ###
-
+#
+# A fully asynchronous Weather plugin for Limnoria using the OpenWeather and Google Maps APIs.
+#
+##
 import json
 import math
 try:
@@ -76,46 +79,58 @@ class Weather(callbacks.Plugin):
 
     # adapted from https://en.wikipedia.org/wiki/Ultraviolet_index#Index_usage
     @staticmethod
-    def format_uvi_icon(uvi):
+    def colour_uvi(uvi: float) -> str:
         """
-        Displays a coloured icon relevant to the UV Index meter.
-        Low: Green Moderate: Yellow High: Orange Very High: Red
-        Extreme: Violet 🥵
+        Assigns a descriptive text and colour to the UV Index value.
         """
+        # Define ranges, colours, and descriptions
+        ranges = [
+            (0, 3, 'light green', 'Low'),
+            (3, 6, 'yellow', 'Moderate'),
+            (6, 8, 'orange', 'High'),
+            (8, 11, 'red', 'Very High'),
+            (11, float('inf'), 'purple', 'Extreme')
+        ]
+
+        # Handle invalid values
         if uvi < 0:
-            icon = '⚪ Neutral'  # Neutral/unknown for invalid values
-        elif uvi >= 0 and uvi < 3:
-            icon = '🟢 Low'
-        elif uvi >= 3 and uvi < 6:
-            icon = '🟡 Moderate'
-        elif uvi >= 6 and uvi < 8:
-            icon = '🟠 High'
-        elif uvi >= 8 and uvi <= 10.9:
-            icon = '🔴 Very High'
-        else:
-            icon = '🟣 Extreme'
-        return icon
+            return ircutils.mircColor(f"Unknown UVI", "light grey")
+
+        # Match the UV index to a range and return coloured text with description
+        for lower, upper, colour, description in ranges:
+            if lower <= uvi < upper:
+                return ircutils.mircColor(f"UVI {uvi} ({description})", colour)
+
+        # Fallback (should not happen)
+        return ircutils.mircColor("UVI Unknown", "grey")
 
     @staticmethod
-    def format_temperature(celsius):
-        """Colourise and format temperatures."""
+    def colour_temperature(celsius: float) -> str:
+        """
+        Colourise and format temperatures.
+        """
+        # Define ranges, colours, and descriptions
+        ranges = [
+            (float('-inf'), 0, 'blue'),         # Below 0°C
+            (0, 1, 'teal'),                     # Exactly 0°C
+            (1, 10, 'light blue'),              # 1°C to < 10°C
+            (10, 20, 'light green'),            # 10°C to < 20°C
+            (20, 30, 'yellow'),                 # 20°C to < 30°C
+            (30, 40, 'orange'),                 # 30°C to < 40°C
+            (40, float('inf'), 'red')           # 40°C and above
+        ]
+
+        # Ensure the input is a float
         c = float(celsius)
-        if c < 0:
-            colour = 'blue'
-        elif c == 0:
-            colour = 'teal'
-        elif c < 10:
-            colour = 'light blue'
-        elif c < 20:
-            colour = 'light green'
-        elif c < 30:
-            colour = 'yellow'
-        elif c < 40:
-            colour = 'orange'
-        else:
-            colour = 'red'
-        string = f"{c}{DEGREE_SIGN}C"
-        return ircutils.mircColor(string, colour)
+
+        # Match the temperature to a range and colour it
+        for lower, upper, colour in ranges:
+            if lower <= c < upper:
+                formatted_temp = f"{c}{DEGREE_SIGN}C"
+                return ircutils.mircColor(formatted_temp, colour)
+
+        # Fallback (should not happen)
+        return ircutils.mircColor(f"{c}{DEGREE_SIGN}C", "grey")
 
     def dd2dms(self, longitude, latitude):
         """Convert decimal degrees to degrees, minutes, and seconds."""
@@ -197,14 +212,14 @@ class Weather(callbacks.Plugin):
         formatted_data.append(f"{location} (Lat: {lat_dms}, Lon: {lon_dms})")
 
         # Current conditions
-        temp = self.format_temperature(round(current['temp']))
-        feels_like = self.format_temperature(round(current['feels_like']))
+        temp = self.colour_temperature(round(current['temp']))
+        feels_like = self.colour_temperature(round(current['feels_like']))
         desc = current['weather'][0]['description'].capitalize()
         humidity = f"Humidity: {current['humidity']}{PERCENT_SIGN}"
         wind_speed = f"Wind: {current['wind_speed']} m/s"
-        uvicon = self.format_uvi_icon(current['uvi'])
-        uvindex = current['uvi']
-        uvi_index = f"UVI {uvindex} {uvicon}"
+        #uvicon = self.display_uvi_icon(current['uvi'])
+        uvindex = round(current['uvi'])
+        uvi_index = self.colour_uvi(uvindex)
 
         formatted_data.append(f"{desc}, Temp: {temp}, Feels like: {feels_like}, {humidity}, {wind_speed}, {uvi_index}")
 
@@ -218,8 +233,8 @@ class Weather(callbacks.Plugin):
         for day in daily[:5]:  # Limit to the next 5 days
             date = datetime.fromtimestamp(day['dt'], tz=timezone.utc).strftime('%A')
             desc = day['weather'][0]['description'].capitalize()
-            min_temp = self.format_temperature(round(day['temp']['min']))
-            max_temp = self.format_temperature(round(day['temp']['max']))
+            min_temp = self.colour_temperature(round(day['temp']['min']))
+            max_temp = self.colour_temperature(round(day['temp']['max']))
             formatted_data.append(f"{date}: {desc}, Min: {min_temp}, Max: {max_temp}")
 
         return ' | '.join(formatted_data)
@@ -315,6 +330,22 @@ class Weather(callbacks.Plugin):
                 handle_error(e, context=f"Processing Google command for location: {location}")
 
         asyncio.run(process_google())
+
+    @wrap(['text'])
+    def help(self, irc, msg, args):
+        """
+        [--user <nick>] [--forecast] [<location>]
+
+        [set <nick>] [location] | [unset <nick>]
+
+        Get the current weather information for a town, city or address.
+
+        [city <(Alpha-2) country code>] [<postcode, (Alpha-2) country code>] <address>
+
+        I.E. 'weather' Ballarat or Ballarat AU OR 3350 AU or 'weather' 38.9071923 -77.036870
+
+         | 'google' [city <(Alpha-2) country code>] to get latitude and longitude of a city/town.
+        """
 
 Class = Weather
 
