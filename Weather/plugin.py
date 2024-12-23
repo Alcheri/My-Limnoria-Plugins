@@ -2,7 +2,6 @@
 # Copyright © MMXXIV, Barry Suridge
 # All rights reserved.
 #
-# ChatGPT: An asynchronous IRC plugin
 ###
 
 import json
@@ -74,6 +73,28 @@ class Weather(callbacks.Plugin):
         self.flush_db()
         world.flushers.remove(self.flush_db)
         super().die()
+
+    # adapted from https://en.wikipedia.org/wiki/Ultraviolet_index#Index_usage
+    @staticmethod
+    def format_uvi_icon(uvi):
+        """
+        Displays a coloured icon relevant to the UV Index meter.
+        Low: Green Moderate: Yellow High: Orange Very High: Red
+        Extreme: Violet 🥵
+        """
+        if uvi < 0:
+            icon = '⚪ Neutral'  # Neutral/unknown for invalid values
+        elif uvi >= 0 and uvi < 3:
+            icon = '🟢 Low'
+        elif uvi >= 3 and uvi < 6:
+            icon = '🟡 Moderate'
+        elif uvi >= 6 and uvi < 8:
+            icon = '🟠 High'
+        elif uvi >= 8 and uvi <= 10.9:
+            icon = '🔴 Very High'
+        else:
+            icon = '🟣 Extreme'
+        return icon
 
     @staticmethod
     def format_temperature(celsius):
@@ -181,8 +202,11 @@ class Weather(callbacks.Plugin):
         desc = current['weather'][0]['description'].capitalize()
         humidity = f"Humidity: {current['humidity']}{PERCENT_SIGN}"
         wind_speed = f"Wind: {current['wind_speed']} m/s"
+        uvicon = self.format_uvi_icon(current['uvi'])
+        uvindex = current['uvi']
+        uvi_index = f"UVI {uvindex} {uvicon}"
 
-        formatted_data.append(f"{desc}, Temp: {temp}, Feels like: {feels_like}, {humidity}, {wind_speed}")
+        formatted_data.append(f"{desc}, Temp: {temp}, Feels like: {feels_like}, {humidity}, {wind_speed}, {uvi_index}")
 
         return ' | '.join(formatted_data)
 
