@@ -1,8 +1,11 @@
 # Weather
 
-![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11-blue.svg)
+![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11%2C%203.12-blue.svg)
 
-A plugin for Limnoria that uses the OpenWeather and Google Maps API's. All output is in `Metric`.\
+A fully asynchronous Weather plugin for Limnoria using the OpenWeather and Google Maps APIs.\
+
+All output is in [Metric](https://www.bipm.org/en/)
+
 This plugin uses Alpha-2 Code for country code [iso.org](https://www.iso.org/obp/ui#iso:pub:PUB500001:en)
 
 ## Setting up
