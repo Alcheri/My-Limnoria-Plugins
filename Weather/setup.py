@@ -9,4 +9,9 @@ from supybot.setup import plugin_setup
 
 plugin_setup(
     'Weather',
+    install_requires=[
+        'asyncio',
+        'aiohttp',
+        'pypickle',
+    ]
 )
