@@ -22,6 +22,9 @@ Subscription: [Google Maps API](https://developers.google.com/maps)
 * /msg yourbot `config plugins.Weather.googlemapsAPI [your_key_here]`
 * /msg yourbot `config channel #channel plugins.Weather.enable True or False` (On or Off)
 
+Run the following from the plugins/Weather folder:\
+`pip install --upgrade -r requirements.txt`
+
 **Note:** [prefix] may be set via `config reply.whenAddressedBy.chars`
 
 ## Using
