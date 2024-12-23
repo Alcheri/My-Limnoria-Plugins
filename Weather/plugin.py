@@ -6,14 +6,16 @@
 ###
 
 import json
-import time
 import math
-import pickle
-import aiohttp
-import asyncio
-
+try:
+    import aiohttp       # asynchronous HTTP client and server framework
+    import asyncio       # asynchronous I/O
+    import pickle        # Python object serialization
+except ImportError as ie:
+    raise Exception(f'Cannot import module: {ie}')
 import supybot.world as world
 import supybot.conf as conf
+
 from datetime import datetime, timezone
 from supybot import utils, ircutils, callbacks, log
 from supybot.commands import *
