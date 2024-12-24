@@ -7,19 +7,17 @@
 # A fully asynchronous Weather plugin for Limnoria using the OpenWeather and Google Maps APIs.
 #
 ##
-import json
 import math
 try:
     import aiohttp       # asynchronous HTTP client and server framework
     import asyncio       # asynchronous I/O
-    import pickle        # Python object serialization
 except ImportError as ie:
     raise Exception(f'Cannot import module: {ie}')
+from datetime import datetime, timezone
+
 import supybot.world as world
 import supybot.conf as conf
-
-from datetime import datetime, timezone
-from supybot import utils, ircutils, callbacks, log
+from supybot import ircutils, callbacks, log
 from supybot.commands import *
 
 try:
@@ -39,16 +37,24 @@ HEADERS = {
 FILENAME = conf.supybot.directories.data.dirize('Weather.db')
 
 # Global Error Routine
-def handle_error(error, context=None):
-    log.error(f"Error occurred: {error} | Context: {context if context else 'None'}")
-    raise callbacks.Error(f"An error occurred: {error}")
+def handle_error(error: Exception, context: str = None, user_message: str = "An error occurred."):
+    """
+    Log and handle errors gracefully.
+
+    Args:
+        error (Exception): The exception object.
+        context (str): Additional context about the error.
+        user_message (str): Message to display to the user.
+    """
+    log.error(f"Error occurred: {error} | Context: {context or 'No additional context provided.'}")
+    raise callbacks.Error(user_message)
 
 class Weather(callbacks.Plugin):
     """
     A simple Weather plugin for Limnoria
     using the OpenWeather and Google Maps APIs.
     """
-    threaded = True
+    threaded = False
 
     def __init__(self, irc):
         super().__init__(irc)
@@ -57,27 +63,32 @@ class Weather(callbacks.Plugin):
         world.flushers.append(self.flush_db)
 
     def load_db(self):
-        """Load the existing database."""
         try:
-            with open(FILENAME, 'rb') as f:
-                self.db = pickle.load(f)
-        except Exception as err:
-            log.debug(f"load_db: Unable to load database: {err}")
+            with open(FILENAME, 'r') as f:
+                self.db = json.load(f)
+        except FileNotFoundError:
+            self.db = {}
+        except json.JSONDecodeError as e:
+            log.warning(f"Failed to parse the database file: {e}")
+            self.db = {}
+        except Exception as e:
+            log.warning(f"Unable to load database: {e}")
 
     def flush_db(self):
-        """Flushes the database to a file."""
         try:
-            with open(FILENAME, 'wb') as f:
-                pickle.dump(self.db, f, 2)
-        except Exception as err:
-            log.warning(f"flush_db: Unable to write database: {err}")
+            with open(FILENAME, 'w') as f:
+                json.dump(self.db, f, indent=4)
+        except Exception as e:
+            log.warning(f"Unable to save database: {e}")
 
     def die(self):
         self.flush_db()
         world.flushers.remove(self.flush_db)
         super().die()
+    
+    #XXX Utilities
 
-    # adapted from https://en.wikipedia.org/wiki/Ultraviolet_index#Index_usage
+    # adapted from https://www.epa.gov/enviro/uv-index-description
     @staticmethod
     def colour_uvi(uvi: float) -> str:
         """
@@ -131,7 +142,7 @@ class Weather(callbacks.Plugin):
 
         # Fallback (should not happen)
         return ircutils.mircColor(f"{c}{DEGREE_SIGN}C", "grey")
-
+    
     def dd2dms(self, longitude, latitude):
         """Convert decimal degrees to degrees, minutes, and seconds."""
         def convert(coord):
@@ -148,37 +159,88 @@ class Weather(callbacks.Plugin):
         y = f"{abs(degrees_y)}{DEGREE_SIGN}{minutes_y}{APOSTROPHE} {seconds_y}{QUOTATION_MARK} {'S' if degrees_y < 0 else 'N'}"
         return x, y
 
-    async def fetch_data(self, url, params):
-        """Fetch data from a given URL using aiohttp."""
+    def format_location(self, lat: float, lon: float, location: str) -> str:
+        """Format location and coordinates for display."""
+        lat_dms, lon_dms = self.dd2dms(lon, lat)
+        return f"{location} (Lat: {lat_dms}, Lon: {lon_dms})"
+
+    def format_current_conditions(self, current: dict) -> str:
+        """Format current weather conditions for display."""
+
+        temp = self.colour_temperature(round(current['temp']))
+        feels_like = self.colour_temperature(round(current['feels_like']))
+        desc = current['weather'][0]['description'].capitalize()
+        humidity = f"Humidity: {current['humidity']}{PERCENT_SIGN}"
+        cloud = f"Clouds: {current['clouds']}"
+        log.error(f"{current}")
+        wind_speed = f"Wind: {round(current['wind_speed'] * 3.6)} Km/h"
+        wind_direction = self._get_wind_direction(current['wind_deg'])
+        uvi_index = self.colour_uvi(round(current['uvi']))
+
+        return f"{desc}, Temp: {temp}, Feels like: {feels_like}, {humidity}, {cloud}{PERCENT_SIGN}, {wind_speed} {wind_direction}, {uvi_index}"
+
+    @staticmethod
+    def _get_wind_direction(degrees: float) -> str:
+        """
+        Calculate and return the wind direction as text.
+        """
+        degrees = degrees % 360  # Normalise to 0-359
+        # Ensure degrees is a float for calculations
+        val = int((degrees / 22.5) + 0.5)
+    
+        # Purely textual wind direction labels
+        directions = [
+            'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+            'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+        ]
+    
+        # Return the corresponding direction
+        return directions[val % 16]
+
+    #XXX Async Functions
+
+    async def fetch_data(self, url: str, params: dict) -> dict:
+        """
+        Fetch JSON data from the given URL with specified parameters.
+
+        Args:
+            url (str): The API endpoint URL.
+            params (dict): Query parameters.
+
+        Returns:
+            dict: Parsed JSON response.
+        """
         try:
             async with aiohttp.ClientSession(headers=HEADERS) as session:
                 async with session.get(url, params=params) as response:
                     response.raise_for_status()
                     return await response.json()
+        except aiohttp.ClientResponseError as e:
+            handle_error(e, context=f"HTTP error for {url} with {params}")
         except Exception as e:
-            handle_error(e, context=f"Fetching data from {url} with params {params}")
+            handle_error(e, context=f"Fetching data from {url} with {params}")
 
-    async def google_maps(self, address):
+    async def google_maps(self, address: str) -> tuple:
         """Get location data from Google Maps API."""
         apikey = self.registryValue('googlemapsAPI')
         if not apikey:
-            raise callbacks.Error("Please configure the Google Maps API key via plugins.Weather.googlemapsAPI [your_key_here]")
+            raise callbacks.Error("Google Maps API key is missing. Configure it with plugins.Weather.googlemapsAPI [your_key].")
 
         url = 'https://maps.googleapis.com/maps/api/geocode/json'
         params = {'address': address, 'key': apikey}
-        log.debug(f"Weather: using URL {url} with params {params} (googlemaps)")
+
+        log.debug(f"Using Google Maps API with {url} and params: {params}")
 
         data = await self.fetch_data(url, params)
-
         if data.get('status') != 'OK':
             handle_error(data.get('status', 'Unknown error'), context=f"Google Maps API for address {address}")
 
-        result_data = data['results'][0]
-        lat = result_data['geometry']['location']['lat']
-        lng = result_data['geometry']['location']['lng']
-        postcode = next((comp['short_name'] for comp in result_data.get('address_components', []) if 'postal_code' in comp.get('types', [])), 'N/A')
-        place_id = result_data.get('place_id', 'N/A')
-        formatted_address = result_data.get('formatted_address', 'Unknown location')
+        result = data['results'][0]
+        lat = result['geometry']['location']['lat']
+        lng = result['geometry']['location']['lng']
+        postcode = next((c['short_name'] for c in result.get('address_components', []) if 'postal_code' in c.get('types', [])), 'N/A')
+        place_id = result.get('place_id', 'N/A')
+        formatted_address = result.get('formatted_address', 'Unknown location')
 
         return formatted_address, lat, lng, postcode, place_id
 
@@ -201,28 +263,10 @@ class Weather(callbacks.Plugin):
         data = await self.fetch_data(url, params)
         return data
 
-    async def format_weather_results(self, location, weather_data):
+    async def format_weather_results(self, location: str, weather_data: dict) -> str:
         """Format weather data for display."""
-        current = weather_data['current']
-        formatted_data = []
-
-        # Coordinates
-        lat, lon = weather_data['lat'], weather_data['lon']
-        (lat_dms, lon_dms) = self.dd2dms(lon, lat)
-        formatted_data.append(f"{location} (Lat: {lat_dms}, Lon: {lon_dms})")
-
-        # Current conditions
-        temp = self.colour_temperature(round(current['temp']))
-        feels_like = self.colour_temperature(round(current['feels_like']))
-        desc = current['weather'][0]['description'].capitalize()
-        humidity = f"Humidity: {current['humidity']}{PERCENT_SIGN}"
-        wind_speed = f"Wind: {current['wind_speed']} m/s"
-        #uvicon = self.display_uvi_icon(current['uvi'])
-        uvindex = round(current['uvi'])
-        uvi_index = self.colour_uvi(uvindex)
-
-        formatted_data.append(f"{desc}, Temp: {temp}, Feels like: {feels_like}, {humidity}, {wind_speed}, {uvi_index}")
-
+        formatted_data = [self.format_location(weather_data['lat'], weather_data['lon'], location)]
+        formatted_data.append(self.format_current_conditions(weather_data['current']))
         return ' | '.join(formatted_data)
 
     async def format_forecast_results(self, location, weather_data):
@@ -245,6 +289,10 @@ class Weather(callbacks.Plugin):
 
         Get the current weather for the specified location, or a default location.
         """
+        # Not 'enabled' in #channel.
+        if not self.registryValue('enabled', msg.channel, irc.network):
+            return
+        
         optlist = dict(optlist)
 
         # Handle user-specific location
@@ -336,7 +384,7 @@ class Weather(callbacks.Plugin):
         """
         [--user <nick>] [--forecast] [<location>]
 
-        [set <nick>] [location] | [unset <nick>]
+        [set location] | [unset]
 
         Get the current weather information for a town, city or address.
 
