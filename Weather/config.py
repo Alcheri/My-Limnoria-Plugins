@@ -65,7 +65,7 @@ conf.registerGlobalValue(
 )
 
 conf.registerChannelValue(
-    Weather, 'enable', registry.Boolean(
+    Weather, 'enabled', registry.Boolean(
         False, """Should plugin work in this channel?""")
 )
 
