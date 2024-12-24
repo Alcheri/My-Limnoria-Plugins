@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2021, Barry Suridge
+# Copyright (c) 2021 - 2024, Barry Suridge
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,8 @@ Weatherstack = conf.registerPlugin('Weatherstack')
 # conf.registerGlobalValue(DALnet, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
 
+conf.registerGroup(Weatherstack, 'apikeys')
+
 conf.registerGlobalValue(
     Weatherstack, 'weatherstackAPI', registry.String(
         '', _("""Sets the API key for Weatherstack."""), private=True)
@@ -59,8 +61,12 @@ conf.registerGlobalValue(
     Weatherstack, 'positionstackAPI', registry.String(
         '', _("""Sets the API key for positionstack."""), private=True)
 )
+conf.registerGlobalValue(
+    Weatherstack, 'openweatherAPI', registry.String(
+        '', _("""Sets the API key for OpenWeatherMap."""), private=True)
+)
 conf.registerChannelValue(
-    Weatherstack, 'enable', registry.Boolean(
+    Weatherstack, 'enabled', registry.Boolean(
         False, """Should plugin work in this channel?""")
 )
 
