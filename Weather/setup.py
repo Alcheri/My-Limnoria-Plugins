@@ -12,6 +12,5 @@ plugin_setup(
     install_requires=[
         'asyncio',
         'aiohttp',
-        'pypickle',
-    ]
+  ]
 )
