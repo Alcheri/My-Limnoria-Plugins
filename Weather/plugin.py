@@ -173,7 +173,6 @@ class Weather(callbacks.Plugin):
         desc = current['weather'][0]['description'].capitalize()
         humidity = f"Humidity: {current['humidity']}{PERCENT_SIGN}"
         cloud = f"Clouds: {current['clouds']}"
-        log.error(f"{current}")
         wind_speed = f"Wind: {round(current['wind_speed'] * 3.6)} Km/h"
         wind_direction = self._get_wind_direction(current['wind_deg'])
         uvi_index = self.colour_uvi(round(current['uvi']))
