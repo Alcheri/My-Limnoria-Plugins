@@ -7,6 +7,7 @@
 # A fully asynchronous Weather plugin for Limnoria using the OpenWeather and Google Maps APIs.
 #
 ##
+import json
 import math
 try:
     import aiohttp       # asynchronous HTTP client and server framework
