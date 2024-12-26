@@ -35,7 +35,7 @@ QUOTATION_MARK = u'\N{QUOTATION MARK}'
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0'
 }
-FILENAME = conf.supybot.directories.data.dirize('Weather.db')
+FILENAME = conf.supybot.directories.data.dirize('Weather.json')
 
 # Global Error Routine
 def handle_error(error: Exception, context: str = None, user_message: str = "An error occurred."):
