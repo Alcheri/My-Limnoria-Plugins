@@ -1,5 +1,5 @@
 ###
-# Copyright © MMXXIV, Barry Suridge
+# Copyright © 2021 - 2024, Barry Suridge
 # All rights reserved.
 #
 ###
@@ -52,8 +52,8 @@ def handle_error(error: Exception, context: str = None, user_message: str = "An 
 
 class Weather(callbacks.Plugin):
     """
-    A simple Weather plugin for Limnoria
-    using the OpenWeather and Google Maps APIs.
+    Add the help for "@plugin help Weather" here
+    This should describe *how* to use this plugin.
     """
     threaded = False
 

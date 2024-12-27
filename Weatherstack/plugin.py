@@ -96,7 +96,8 @@ def dd2dms(longitude: float, latitude: float) -> tuple[str, str]:
 ### Weatherstack Plugin ###
 class Weatherstack(callbacks.Plugin):
     """
-    A Weather plugin for Limnoria using the WeatherStack API.
+    Add the help for "@plugin help Weatherstack" here
+    This should describe *how* to use this plugin.
     """
     threaded = False
 

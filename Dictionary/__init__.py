@@ -10,6 +10,8 @@ Dictionary: An English dictionary plugin.
 """
 
 import sys
+if sys.version_info < (3, 10):
+    raise RuntimeError("This plugin requires Python 3.10 or newer. Please upgrade your Python installation.")
 import supybot
 from supybot import world
 
@@ -18,7 +20,7 @@ __version__ = "22122024"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author('Barry Suridge', 'Alcheri',
-                            'barry.suridge@outlook.com')
+                            'barry.suridge@gmail.com')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.

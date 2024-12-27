@@ -1,5 +1,5 @@
 ###
-# Copyright © MMXXIV, Barry Suridge
+# Copyright © 2021 - 2024, Barry Suridge
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,10 @@ Weather: A simple weather plugin.
 """
 
 import sys
+
 if sys.version_info <= (3, 9):
-    raise RuntimeError("This plugin requires Python 3.9 or above.")
+    raise RuntimeError("This plugin requires Python 3.9 or newer. Please upgrade your Python installation.")
+
 import supybot
 from supybot import world
 
