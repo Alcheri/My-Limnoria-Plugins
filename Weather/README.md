@@ -1,6 +1,6 @@
 # Weather
 
-![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11%2C%203.12%2C%203.13-blue.svg)
+![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11%2C%203.12-blue.svg)
 
 A fully asynchronous Weather plugin for Limnoria using the OpenWeather and Google Maps APIs.
 
@@ -18,23 +18,54 @@ Subscription: [Google Maps API](https://developers.google.com/maps)
 
 **Google** gives each Google Maps account $200/month of free credit, equivalent to 40,000 addresses geocoded per month.
 
+## Install
+
+Go into your Limnoria plugin dir, usually ~/runbot/plugins and run:
+
+```plaintext
+git clone https://github.com/Alcheri/My-Limnoria-Plugins/Weather
+```
+
+To install additional requirements, run from /plugins/Weather folder:
+
+```plaintext
+pip install --upgrade -r requirements.txt 
+```
+
+Next, load the plugin:
+
+```plaintext
+/msg bot load Weather
+```
+
 ## Configure your bot
 
-* /msg yourbot load Weather
-* /msg yourbot `config plugins.Weather.openweatherAPI [your_key_here]`
-* /msg yourbot `config plugins.Weather.googlemapsAPI [your_key_here]`
-* /msg yourbot `config channel #channel plugins.Weather.enable True or False` (On or Off)
+* **_config plugins.Weather.openweatherAPI [your_key_here]_**
+* **_config plugins.Weather.googlemapsAPI [your_key_here]_**
+* **_config channel #channel plugins.Weather.enable True or False (On or Off)_**
 
-Run the following from the plugins/Weather folder:\
-`pip install --upgrade -r requirements.txt`
-
-**Note:** [prefix] may be set via `config reply.whenAddressedBy.chars`
+**Note:** For all Southern Hemisphere latitudes prefix the argument with '--' i.e.:
+<pre>   -- -37.5621587 143.8502556</pre>
 
 ## Using
 
-[prefix] weather [city (Alpha-2 country code)] [postcode, (Alpha-2 country code)] [address]\
-[prefix] google [city (Alpha-2 country code)] [postcode, (Alpha-2 country code)] [latitude, longitude] [address]\
-[prefix] set [location] -- Sets your current ident@host to [location]\
-[prefix] help -- Plugin help - accepts no arguments.
+```plaintext
+@weather 1600 Amphitheatre Pkwy, Mountain View, CA
+1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA (Lat: 122°5' 4.92" W, Lon: 37°25' 21.0" N) | Clear sky, Temp: 8.0°C, Feels like: 6.0°C, Humidity: 91%, Clouds: 0%, Wind: 7 Km/h NW, UVI 0 (Low)
+
+@weather -- -37.5621587 143.8502556
+Ballarat Central VIC 3350, Australia (Lat: 143°51' 1.08" E, Lon: 37°33' 43.92" S) | Clear sky, Temp: 10.0°C, Feels like: 10.0°C, Humidity: 99%, Clouds: 9%, Wind: 5 Km/h SSE, UVI 0 (Low)
+
+@google -37.5283674, 143.8164991
+From Google Maps: 1275 Grevillea Rd, Wendouree VIC 3355, Australia 3355 [ID: ChIJcSzC6YxD0WoRWtgRRJh8D2U] -37.5283674 143.8164991
+
+@google Ballarat VIC AU
+From Google Maps: Ballarat VIC, Australia N/A [ID: ChIJeRiTMFRE0WoRILegMKR5BQQ] -37.5621587 143.8502556
+
+@weather set [location] -- Sets your current ident@host to [location]
+
+@weather help -- Plugin help - accepts no arguments.
+```
+
 <br/><br/>
 <p align="center">Copyright © MMXXIV, Barry Suridge</p>
