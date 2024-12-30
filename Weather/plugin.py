@@ -285,7 +285,7 @@ class Weather(callbacks.Plugin):
 
     @wrap([getopts({'user': 'nick', 'forecast': ''}), additional('text')])
     def weather(self, irc, msg, args, optlist, location=None):
-        """[--user <nick>] [--forecast] [<location>]
+        """[--user <nick>] [--forecast] [-- <location>]
 
         Get the current weather for the specified location, or a default location.
         """
@@ -382,7 +382,7 @@ class Weather(callbacks.Plugin):
     @wrap(['text'])
     def help(self, irc, msg, args):
         """
-        [--user <nick>] [--forecast] [<location>]
+        [--user <nick>] [--forecast] [-- <location>]
 
         [set location] | [unset]
 
