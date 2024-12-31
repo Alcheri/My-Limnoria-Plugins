@@ -5,7 +5,7 @@ pendulum
 pgeocode
 python-dotenv
 pytest
-python>=3.9
+python
 openai
 tiktoken
 urllib3
