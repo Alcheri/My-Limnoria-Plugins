@@ -23,7 +23,7 @@ Subscription: [Google Maps API](https://developers.google.com/maps)
 Go into your Limnoria plugin dir, usually ~/runbot/plugins and run:
 
 ```plaintext
-git clone https://github.com/Alcheri/My-Limnoria-Plugins/Weather
+gh repo clone Alcheri/My-Limnoria-Plugins
 ```
 
 To install additional requirements, run from /plugins/Weather folder:
@@ -66,6 +66,5 @@ From Google Maps: Ballarat VIC, Australia N/A [ID: ChIJeRiTMFRE0WoRILegMKR5BQQ] 
 
 @weather help -- Plugin help - accepts no arguments.
 ```
-
 <br/><br/>
 <p align="center">Copyright © MMXXIV, Barry Suridge</p>
