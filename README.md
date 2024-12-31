@@ -2,7 +2,6 @@
 
 :earth_asia:
 
-[![Build Status](https://app.travis-ci.com/Alcheri/My-Limnoria-Plugins.svg?token=pN4Z7GMexmH2xhm1Tq8j&branch=master)](https://app.travis-ci.com/Alcheri/My-Limnoria-Plugins)
 ![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.10%2C%203.11%2C%203.12%2C%203.13-blue.svg)
 
 A collection of plugins for the [Limnoria](https://github.com/ProgVal/Limnoria) IRC bot.
