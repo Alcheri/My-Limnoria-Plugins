@@ -1,4 +1,3 @@
-sudo: false
 language: python
 python:
   - "3.9"
@@ -7,7 +6,8 @@ python:
   - "3.12"
   - "3.13"
 
-#install:
+install:
+    - pip3 install -vr requirements.txt
 
 script:
 - pytest
