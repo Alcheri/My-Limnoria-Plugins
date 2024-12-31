@@ -23,7 +23,7 @@ Subscription: [Google Maps API](https://developers.google.com/maps)
 Go into your Limnoria plugin dir, usually ~/runbot/plugins and run:
 
 ```plaintext
-gh repo clone Alcheri/My-Limnoria-Plugins
+git clone https://github.com/Alcheri/My-Limnoria-Plugins.git
 ```
 
 To install additional requirements, run from /plugins/Weather folder:
