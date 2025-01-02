@@ -3,3 +3,6 @@
 .env
 UrbanDictionary/
 Limnoria-Plugins.code-workspace
+/conf
+/data
+/logs
