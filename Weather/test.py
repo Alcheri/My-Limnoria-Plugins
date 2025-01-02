@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from Weather.plugin import Weather, dd2dms, extract_address_details, colour
 
-# Weather/test_plugin.py
+# Weather/test.py
 
 
 class TestWeather(unittest.TestCase):
