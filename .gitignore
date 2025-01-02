@@ -1,15 +1,3 @@
-backup
-build
-test-data
-test-conf
-test-logs
+
 *.pyc
-*.swp
-*.swo
-*~
-*.mo
-*.komodoproject
-README.txt
-limnoria.code-workspace
 .env
-/UrbanDictionary
