@@ -30,6 +30,6 @@ Using
 ## Example
 
 ```plaintext
-@dns crawl-203-208-60-1.googlebot.com
-DNS: crawl-203-208-60-1.googlebot.com resolves to [203.208.60.1] LOC: City:Beijing State:Beijing Long:116.37922668457031 Lat:39.91175842285156 Country Code:CN Country:China 🇨🇳 Post/Zip Code:100000
+<Barry> @dns crawl-203-208-60-1.googlebot.com
+<Borg>  DNS: crawl-203-208-60-1.googlebot.com resolves to [203.208.60.1] LOC: City:Beijing State:Beijing Long:116.37922668457031 Lat:39.91175842285156 Country Code:CN Country:China 🇨🇳 Post/Zip Code:100000
 ```
