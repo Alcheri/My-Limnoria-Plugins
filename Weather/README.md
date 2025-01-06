@@ -50,17 +50,17 @@ Next, load the plugin:
 ## Using
 
 ```plaintext
-@weather 1600 Amphitheatre Pkwy, Mountain View, CA
-1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA (Lat: 122°5' 4.92" W, Lon: 37°25' 21.0" N) | Clear sky, Temp: 8.0°C, Feels like: 6.0°C, Humidity: 91%, Clouds: 0%, Wind: 7 Km/h NW, UVI 0 (Low)
+<Barry> @weather 1600 Amphitheatre Pkwy, Mountain View, CA
+<Borg>  1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA (Lat: 122°5' 4.92" W, Lon: 37°25' 21.0" N) | Clear sky, Temp: 8.0°C, Feels like: 6.0°C, Humidity: 91%, Clouds: 0%, Wind: 7 Km/h NW, UVI 0 (Low)
 
-@weather -- -37.5621587 143.8502556
-Ballarat Central VIC 3350, Australia (Lat: 143°51' 1.08" E, Lon: 37°33' 43.92" S) | Clear sky, Temp: 10.0°C, Feels like: 10.0°C, Humidity: 99%, Clouds: 9%, Wind: 5 Km/h SSE, UVI 0 (Low)
+<Barry> @weather -- -37.5621587 143.8502556
+<Borg>  Ballarat Central VIC 3350, Australia (Lat: 143°51' 1.08" E, Lon: 37°33' 43.92" S) | Clear sky, Temp: 10.0°C, Feels like: 10.0°C, Humidity: 99%, Clouds: 9%, Wind: 5 Km/h SSE, UVI 0 (Low)
 
-@google -37.5283674, 143.8164991
-From Google Maps: 1275 Grevillea Rd, Wendouree VIC 3355, Australia 3355 [ID: ChIJcSzC6YxD0WoRWtgRRJh8D2U] -37.5283674 143.8164991
+<Barry> @google -37.5283674, 143.8164991
+<Borg>  From Google Maps: 1275 Grevillea Rd, Wendouree VIC 3355, Australia 3355 [ID: ChIJcSzC6YxD0WoRWtgRRJh8D2U] -37.5283674 143.8164991
 
-@google Ballarat VIC AU
-From Google Maps: Ballarat VIC, Australia N/A [ID: ChIJeRiTMFRE0WoRILegMKR5BQQ] -37.5621587 143.8502556
+<Barry> @google Ballarat VIC AU
+<Borg>  From Google Maps: Ballarat VIC, Australia N/A [ID: ChIJeRiTMFRE0WoRILegMKR5BQQ] -37.5621587 143.8502556
 
 @weather set [location] -- Sets your current ident@host to [location]
 
