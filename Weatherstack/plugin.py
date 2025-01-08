@@ -4,8 +4,6 @@
 ###
 import math
 import re
-import aiohttp
-import asyncio
 from datetime import datetime
 from functools import lru_cache
 from supybot import callbacks, ircutils, log
@@ -15,6 +13,13 @@ try:
     _ = PluginInternationalization('Weatherstack')
 except ImportError:
     _ = lambda x: x
+
+# Third-party modules
+try:
+    import aiohttp  # asynchronous HTTP client and server framework
+    import asyncio  # asynchronous I/O
+except Exception as ie:
+    raise Exception(f"Cannot import module: {ie}")
 
 # Unicode Symbols
 APOSTROPHE = u'\N{APOSTROPHE}'
@@ -104,6 +109,71 @@ class Weatherstack(callbacks.Plugin):
     def __init__(self, irc):
         super().__init__(irc)
 
+    ### Internal Helper Functions ###
+    def _parse_postcode(self, code: str) -> tuple[str, str]:
+        """
+        Parse a postcode and country code from a combined string.
+
+        Args:
+            code (str): A string containing the postcode and country code
+                        separated by a comma (e.g., '3350, AU').
+
+        Returns:
+            tuple[str, str]: A tuple containing the postcode and country code.
+        """
+        if not isinstance(code, str):
+            raise ValueError("Input to _parse_postcode must be a string.")
+
+        parts = [part.strip() for part in code.split(",")]
+        if len(parts) != 2:
+            raise ValueError("Input must be in the format 'postcode, countrycode'.")
+
+        postcode, countrycode = parts
+        if not postcode.isalnum():
+            raise ValueError("Invalid postcode format.")
+        if len(countrycode) != 2 or not countrycode.isalpha():
+            raise ValueError("Country code must be two alphabetic characters.")
+
+        return postcode, countrycode
+
+    async def get_location_by_coordinates(self, lat: float, lon: float) -> str:
+        """
+        Get a location name from latitude and longitude using reverse geocoding.
+
+        Args:
+            lat (float): Latitude.
+            lon (float): Longitude.
+
+        Returns:
+            str: A human-readable location name.
+        """
+        apikey = self.registryValue("openweatherAPI")
+        if not apikey:
+            raise callbacks.Error("OpenWeather API key is missing.")
+
+        url = f"http://api.openweathermap.org/geo/1.0/reverse"
+        params = {"lat": lat, "lon": lon, "appid": apikey}
+
+        try:
+            async with aiohttp.ClientSession(headers=HEADERS) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status != 200:
+                        handle_error(f"Failed to reverse geocode coordinates: {response.status}", "Reverse Geocoding")
+                    data = await response.json()
+        except Exception as e:
+            handle_error(e, "get_location_by_coordinates")
+
+        if not data:
+            raise callbacks.Error(f"No location data found for coordinates ({lat}, {lon}).")
+
+        location = data[0].get("name", "Unknown Location")
+        if "state" in data[0]:
+            location += f", {data[0]['state']}"
+        if "country" in data[0]:
+            location += f", {data[0]['country']}"
+
+        return location
+
     ### API Integration Functions ###
     async def query_postal_code(self, code: str) -> list[float]:
         """Resolve latitude and longitude from a postcode using pgeocode."""
@@ -179,7 +249,7 @@ class Weatherstack(callbacks.Plugin):
         # Not 'enabled' in #channel.
         if not self.registryValue('enabled', msg.channel, irc.network):
             return
-        
+
         if not location:
             irc.error("Specify a valid location (e.g., 'Ballarat, AU' or '3350, AU').")
             return
@@ -193,6 +263,5 @@ class Weatherstack(callbacks.Plugin):
             irc.reply(result, prefixNick=False)
         except Exception as e:
             handle_error(e, "Weather Command")
-
 
 Class = Weatherstack
