@@ -61,7 +61,7 @@ class ISO(callbacks.Plugin):
             alpha2 = country[1]
         except KeyError as error:
             raise callbacks.Error(f'{error} unknown country code.')
-        irc.reply(f'{alpha2} {name}')
+        irc.reply(f'{alpha2} {name}', prefixNick=False)
 
 Class = ISO
 
