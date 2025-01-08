@@ -1,9 +1,11 @@
 # WeatherStack
 
-![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11%2C%203.12%2C%203.13-blue.svg)
+![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11%2C%203.12%2C%203.13-blue.svg) ![Build Status](../img/status.svg) ![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
 
 A plugin for Limnoria that uses the WeatherStack API. All output is in [Metric](https://www.bipm.org/en/).\
+
 The weather output is for the current date in a location ONLY!\
+
 This plugin uses Alpha-2 Code for country code [iso.org](https://www.iso.org/obp/ui#iso:pub:PUB500001:en)
 
 ## Setting up
