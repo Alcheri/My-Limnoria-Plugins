@@ -6,7 +6,7 @@ A plugin for Limnoria that uses the WeatherStack API. All output is in [Metric](
 The weather output is for the current date in a location ONLY!\
 This plugin uses Alpha-2 Code for country code [iso.org](https://www.iso.org/obp/ui#iso:pub:PUB500001:en)
 
-## Configuring
+## Setting up
 
 This plugin uses WeatherStack to get data. A free API key is required. Limited to 100 calls per month.\
 Get an API key: [WeatherStack](https://weatherstack.com//)
@@ -17,19 +17,44 @@ Get an API key: [positionstack](https://positionstack.com/)
 This plugin uses OpenWeatherMap as a fallback. A free API key is required.\
 Get an API key: [OpenWeatherMap](https://openweathermap.org/api/)
 
-## Setting up
+## Install
 
-* The following library is required. Run the command (below) from the Weatherstack folder to install.
-* pgeocode: Python library for high performance off-line querying of GPS coordinates.
+Download the plugin:
 
-* `pip install --upgrade -r requirements.txt`
+```plaintext
+https://github.com/Alcheri/My-Limnoria-Plugins/tree/master/Weatherstack
+```
+
+To install additional requirements, run from /plugins/Weatherstack folder:
+
+```plaintext
+pip install --upgrade -r requirements.txt 
+```
+
+Next, load the plugin:
+
+```plaintext
+/msg bot load Weatherstack
+```
 
 ## Configure your bot
 
-* /msg yourbot load Weatherstack
-* /msg yourbot `config plugins.Weatherstack.weatherstackAPI  [Your_API_KEY]`
-* /msg yourbot `config plugins.Weatherstack.positionstackAPI [Your_API_KEY]`
-* /msg yourbot `config plugins.Weatherstack.openweatherAPI   [Your_API_KEY]`
-* /msg yourbot `config channel #channel plugins.Weatherstack.enable True or False` (On or Off)
+* **_config plugins.Weatherstack.weatherstackAPI  [Your_API_KEY]_**
+* **_config plugins.Weatherstack.positionstackAPI [Your_API_KEY]_**
+* **_config plugins.Weatherstack.openweatherAPI   [Your_API_KEY]_**
+
+    Enable in #channel? Default: False
+
+* **_config channel #channel plugins.Weatherstack.enabled True or False` (On or Off)_**
+
+## Using
+
+<!-- LaTeX text formatting (colour) -->
+>\<Barry\> @weather 3355, au\
+>\<Borg\>  Ballarat, Victoria, Australia | Lat: 37°34' 1.2" S, Lon: 143°51' 0.0" E | 08-01-2025 12:05 | Sunny, Humidity 33%, Precip: 0 mm/h, Temp: ${\texttt{\color{yellow}27.0°C}}$, Feels like: ${\texttt{\color{yellow}26.0°C}}$, Wind: 12 Km/h N, ${\texttt{\color{purple}UVI 11 (Extreme)}}$
+>
+>\<Barry\> @weather Ballarat, AU\
+>\<Borg\>  Ballarat, Victoria, Australia | Lat: 37°34' 1.2" S, Lon: 143°51' 0.0" E | 08-01-2025 12:53 | Sunny, Humidity 33%, Precip: 0 mm/h, Temp: ${\texttt{\color{yellow}27.0°C}}$, Feels like: ${\texttt{\color{yellow}26.0°C}}$, Wind: 12 Km/h N, ${\texttt{\color{purple}UVI 11 (Extreme)}}$
+
 <br><br>
 <p align="center">Copyright © MMXXIV, Barry Suridge</p>
