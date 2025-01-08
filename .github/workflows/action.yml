@@ -1,3 +1,0 @@
-- name: PyCharm Python Security Scanner
-uses: tonybaloney/pycharm-security@1.25.1
-            
