@@ -23,7 +23,7 @@ pip install --upgrade -r requirements.txt
 Next, load the plugin:
 
 ```plaintext
-/msg bot load Weather
+/msg bot load ISO
 ```
 
 ## Setting up
