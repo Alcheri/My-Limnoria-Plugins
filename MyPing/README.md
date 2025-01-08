@@ -1,22 +1,44 @@
-# An alternative to Supybots' PING function.
+# An alternative to Limnorias' PING function.
 
-![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11-blue.svg)
-
+![Python versions](https://img.shields.io/badge/Python-version-blue) ![Supported Python versions](https://img.shields.io/badge/3.9%2C%203.10%2C%203.11%2C%203.12%2C%203.13-blue.svg) ![Build Status](../img/status.svg) ![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
 
 Returns the ping result of <hostname | ip or IPv6> using Python's shlex library.
 
+## Install
+
+Download the plugin:
+
+```plaintext
+https://github.com/Alcheri/My-Limnoria-Plugins/tree/master/MyPing
+```
+
+Next, load the plugin:
+
+```plaintext
+/msg bot load MyPing
+```
+
 ## Configuring
 
-* `config channel #channel plugins.MyPing.enable True or False` (On or Off)
+* **_config channel #channel plugins.MyPing.enable True or False` (On or Off_**
 
 ## Setting up
 
-To stop conflict with Supybots' core 'ping' function do the following:\
-`[prefix] defaultplugin --remove ping Misc`\
-`[prefix] defaultplugin ping MyPing`
+To stop conflict with Limnorias' core 'ping' function do the following:\
+
+\<Barry\> defaultplugin --remove ping Misc\
+\<Borg\> defaultplugin ping MyPing
 
 ## Using
+<!-- LaTeX text formatting (colour) -->
+\<Barry\> @ping Mini-Me\
+\<Borg\>  ${\texttt{\color{red}its.all.good.in.bazzas.club}}$ is Reachable ~ Time elapsed: ${\texttt{\color{teal}(0.0, 0.0)}}$ seconds/milliseconds Packet Loss: ${\texttt{\color{teal}0%}}$
 
-[prefix/nick] ping [hostname | Nick | IPv4 or IPv6]
+\<Barry\> @ping 167.88.114.11\
+\<Borg\>  ${\texttt{\color{red}167.88.114.11}}$ is Reachable ~ Time elapsed: ${\texttt{\color{teal}(0.0, 362.0)}}$ seconds/milliseconds Packet Loss: ${\texttt{\color{teal}0%}}$
 
-**Note:** [prefix] may be set via `config reply.whenAddressedBy.chars`
+\<Barry\> @ping 2a01:4f9:c011:33a2::20\
+\<Borg\>  ${\texttt{\color{red}2a01:4f9:c011:33a2::20}}$ is Reachable ~ Time elapsed: ${\texttt{\color{teal}(0.0, 167.0)}}$ seconds/milliseconds Packet Loss: ${\texttt{\color{teal}0%}}$
+
+<br><br>
+<p align="center">Copyright © MMXXV, Barry Suridge</p>
