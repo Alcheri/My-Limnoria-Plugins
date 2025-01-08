@@ -38,7 +38,10 @@ except ImportError:
     # without the i18n module
     _ = lambda x: x
 
-from iso3166 import countries
+try:
+    from iso3166 import countries
+except Exception as ie:
+    raise Exception(f'Cannot import module: {ie}')
 
 class ISO(callbacks.Plugin):
     """Convert alpha2 country codes to country name."""
