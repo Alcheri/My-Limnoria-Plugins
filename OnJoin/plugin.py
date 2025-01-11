@@ -32,6 +32,7 @@ import os.path
 import supybot.ircutils as utils
 import supybot.callbacks as callbacks
 
+
 class OnJoin(callbacks.Plugin):  # pylint: disable=too-many-ancestors
     """Send a notice to all users entering a channel."""
 
@@ -48,12 +49,12 @@ class OnJoin(callbacks.Plugin):  # pylint: disable=too-many-ancestors
 
         # Check if in a channel and see if we should be 'disabled' in it.
         # config channel #channel plugins.onjoin.enable True or False (or On or Off)
-        if self.registryValue('enable', channel):
+        if self.registryValue("enable", channel):
             p = os.path.abspath(os.path.dirname(__file__))
-            p = p + '/quotes.txt'
+            p = p + "/quotes.txt"
             fp = str(p)
             line_num = 0
-            selected_line = ''
+            selected_line = ""
             try:
                 with open(fp) as f:
                     while True:
@@ -65,22 +66,30 @@ class OnJoin(callbacks.Plugin):  # pylint: disable=too-many-ancestors
                             selected_line = line
                 # It's not the bot.
                 if utils.strEqual(irc.nick, msg.nick) is False:
-                    irc.reply(self._teal(selected_line.strip()), notice=True, private=True, to=msg.nick)
+                    irc.reply(
+                        self._teal(selected_line.strip()),
+                        notice=True,
+                        private=True,
+                        to=msg.nick,
+                    )
                 else:
                     pass
             except IOError as err:
                 # Non-fatal error traceback information
-                raise FileError(f'{err}: failed to open')
+                raise FileError(f"{err}: failed to open")
         else:
             return
 
     def _teal(self, string):
         """Return a teal coloured string."""
-        return utils.bold(utils.mircColor(string, 'teal'))
+        return utils.bold(utils.mircColor(string, "teal"))
+
 
 class FileError(Exception):
     """Non-fatal error traceback."""
+
     pass
+
 
 Class = OnJoin
 
