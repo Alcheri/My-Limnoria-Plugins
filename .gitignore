@@ -1,9 +1,10 @@
-
-*.pyc
-.env
-UrbanDictionary/
-Limnoria-Plugins.code-workspace
+.*
+!.gitignore
+/__pycache__
+*.Identifier
+/local/__pycache__
 /conf
 /data
 /logs
 /.vscode
+Limnoria-Plugins.code-workspace
