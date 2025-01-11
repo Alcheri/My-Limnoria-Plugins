@@ -21,19 +21,19 @@ import supybot.world as world
 __version__ = "0.02"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('Barry Suridge', 'Alcheri',
-                            'barry.suridge@outlook.com')
+__author__ = supybot.Author("Barry Suridge", "Alcheri", "barry.suridge@outlook.com")
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/Alcheri/Plugins.git'
+__url__ = "https://github.com/Alcheri/Plugins.git"
 
 from . import config
 from . import plugin
 from importlib import reload
+
 # In case we're being reloaded.
 reload(config)
 reload(plugin)

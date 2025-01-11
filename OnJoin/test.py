@@ -9,7 +9,7 @@ from supybot.test import *
 
 
 class OnJoinTestCase(PluginTestCase):
-    plugins = ('OnJoin',)
+    plugins = ("OnJoin",)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
