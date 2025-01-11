@@ -1,10 +1,10 @@
 .*
 !.gitignore
-/__pycache__
 *.Identifier
+/__pycache__
 /local/__pycache__
+*.bak
 /conf
 /data
 /logs
-/.vscode
-Limnoria-Plugins.code-workspace
+*.code-workspace
