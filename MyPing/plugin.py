@@ -34,32 +34,26 @@ import subprocess
 from supybot.commands import *
 import supybot.ircutils as utils
 import supybot.callbacks as callbacks
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('MyPing')
+
+    _ = PluginInternationalization("MyPing")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 from .local.colour import red, teal
 
-    ###############
-    #  FUNCTIONS  #
-    ###############
+###############
+#  FUNCTIONS  #
+###############
 
-special_chars = (
-    '-',
-    '[',
-    ']',
-    '\\',
-    '`',
-    '^',
-    '{',
-    '}',
-    '_')
+special_chars = ("-", "[", "]", "\\", "`", "^", "{", "}", "_")
+
 
 def is_nick(nick):
-    """ Checks to see if a nickname `nick` is valid.
+    """Checks to see if a nickname `nick` is valid.
     According to :rfc:`2812 #section-2.3.1`, section 2.3.1, a nickname must start
     with either a letter or one of the allowed special characters, and after
     that it may consist of any combination of letters, numbers, or allowed
@@ -72,17 +66,19 @@ def is_nick(nick):
             return False
     return True
 
+
 def _elapsed_loss(loss):
     """
     :rtype: dict or None
     """
     lines = loss.split("\n")
-    loss = lines[-2].split(',')[2].split()[0]
-    timing = lines[-1].split()[3].split('/')
+    loss = lines[-2].split(",")[2].split()[0]
+    timing = lines[-1].split()[3].split("/")
     elapsed = int(float(timing[1]))
-    time = divmod(elapsed,1000.0)
+    time = divmod(elapsed, 1000.0)
 
-    return(f'Time elapsed: {teal(time)} seconds/milliseconds Packet Loss: {teal(loss)}')
+    return f"Time elapsed: {teal(time)} seconds/milliseconds Packet Loss: {teal(loss)}"
+
 
 class MyPing(callbacks.Plugin):
 
@@ -93,7 +89,7 @@ class MyPing(callbacks.Plugin):
 
     threaded = True
 
-    @wrap(['something'])
+    @wrap(["something"])
     def ping(self, irc, msg, args, host):
         """<hostmask> | Nick | IPv4 or IPv6>
         An alternative to Supybot's PING function.
@@ -102,7 +98,7 @@ class MyPing(callbacks.Plugin):
 
         # Check if we should be 'disabled' in a channel.
         # config channel #channel plugins.myping.enable True or False (or On or Off)
-        if not self.registryValue('enable', channel):
+        if not self.registryValue("enable", channel):
             return
         if is_nick(host):  # Valid nick?
             nick = host
@@ -112,14 +108,15 @@ class MyPing(callbacks.Plugin):
                 (nick, _, host) = utils.splitHostmask(userHostmask)
             except KeyError:
                 pass
-        cmd = shlex.split(f'ping -c 1 -W 1 {host}')
+        cmd = shlex.split(f"ping -c 1 -W 1 {host}")
         try:
             reply = subprocess.check_output(cmd).decode().strip()
             elapsed_loss = _elapsed_loss(reply)
         except subprocess.CalledProcessError:
-            #Will print the command failed
-            irc.reply(f'{red(cmd[-1])} is Not Reachable', prefixNick=False)
+            # Will print the command failed
+            irc.reply(f"{red(cmd[-1])} is Not Reachable", prefixNick=False)
         else:
-            irc.reply(f'{red(cmd[-1])} is Reachable ~ {elapsed_loss}', prefixNick=False)
+            irc.reply(f"{red(cmd[-1])} is Reachable ~ {elapsed_loss}", prefixNick=False)
+
 
 Class = MyPing

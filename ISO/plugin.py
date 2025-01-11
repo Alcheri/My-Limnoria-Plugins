@@ -30,9 +30,11 @@
 
 from supybot import callbacks
 from supybot.commands import *
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('ISO')
+
+    _ = PluginInternationalization("ISO")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -41,15 +43,17 @@ except ImportError:
 try:
     from iso3166 import countries
 except Exception as ie:
-    raise Exception(f'Cannot import module: {ie}')
+    raise Exception(f"Cannot import module: {ie}")
+
 
 class ISO(callbacks.Plugin):
     """Convert alpha2 country codes to country name."""
+
     threaded = True
 
-    @wrap(['text'])
+    @wrap(["text"])
     def country(self, irc, msg, args, code):
-        """"
+        """ "
         Convert alpha2 country codes to country name.
         Convert country name to alpha2 country codes.
         """
@@ -60,8 +64,9 @@ class ISO(callbacks.Plugin):
             name = country[0]
             alpha2 = country[1]
         except KeyError as error:
-            raise callbacks.Error(f'{error} unknown country code.')
-        irc.reply(f'{alpha2} {name}', prefixNick=False)
+            raise callbacks.Error(f"{error} unknown country code.")
+        irc.reply(f"{alpha2} {name}", prefixNick=False)
+
 
 Class = ISO
 
