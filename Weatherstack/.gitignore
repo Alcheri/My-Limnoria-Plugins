@@ -1,7 +1,0 @@
-.*
-!.gitignore
-
-*.Identifier
-
-/__pycache__
-/local/__pycache__
