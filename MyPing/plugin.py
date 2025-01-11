@@ -81,9 +81,7 @@ def _elapsed_loss(loss):
 
 
 class MyPing(callbacks.Plugin):
-
     def __init__(self, irc):
-
         self.__parent = super(MyPing, self)
         self.__parent.__init__(irc)
 

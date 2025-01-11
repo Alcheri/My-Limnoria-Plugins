@@ -31,10 +31,10 @@
 from supybot.setup import plugin_setup
 
 plugin_setup(
-    'Weatherstack',
+    "Weatherstack",
     install_requires=[
-        'aiohttp',
-        'asyncio',
-        'pgeocode',
+        "aiohttp",
+        "asyncio",
+        "pgeocode",
     ],
 )

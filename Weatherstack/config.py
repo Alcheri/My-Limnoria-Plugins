@@ -29,13 +29,16 @@
 ###
 
 from supybot import conf, registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Weather')
+
+    _ = PluginInternationalization("Weather")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
+
 
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
@@ -43,31 +46,36 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Weatherstack', True)
+
+    conf.registerPlugin("Weatherstack", True)
 
 
-Weatherstack = conf.registerPlugin('Weatherstack')
+Weatherstack = conf.registerPlugin("Weatherstack")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(DALnet, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
 
-conf.registerGroup(Weatherstack, 'apikeys')
+conf.registerGroup(Weatherstack, "apikeys")
 
 conf.registerGlobalValue(
-    Weatherstack, 'weatherstackAPI', registry.String(
-        '', _("""Sets the API key for Weatherstack."""), private=True)
+    Weatherstack,
+    "weatherstackAPI",
+    registry.String("", _("""Sets the API key for Weatherstack."""), private=True),
 )
 conf.registerGlobalValue(
-    Weatherstack, 'positionstackAPI', registry.String(
-        '', _("""Sets the API key for positionstack."""), private=True)
+    Weatherstack,
+    "positionstackAPI",
+    registry.String("", _("""Sets the API key for positionstack."""), private=True),
 )
 conf.registerGlobalValue(
-    Weatherstack, 'openweatherAPI', registry.String(
-        '', _("""Sets the API key for OpenWeatherMap."""), private=True)
+    Weatherstack,
+    "openweatherAPI",
+    registry.String("", _("""Sets the API key for OpenWeatherMap."""), private=True),
 )
 conf.registerChannelValue(
-    Weatherstack, 'enabled', registry.Boolean(
-        False, """Should plugin work in this channel?""")
+    Weatherstack,
+    "enabled",
+    registry.Boolean(False, """Should plugin work in this channel?"""),
 )
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
