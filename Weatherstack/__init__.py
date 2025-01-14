@@ -33,9 +33,8 @@ Weather: A simple weather plugin.
 """
 
 import sys
-
-if sys.version_info <= (3, 6):
-    raise RuntimeError("This plugin requires Python 3.6 or above.")
+if sys.version_info <= (3, 9):
+    raise RuntimeError("This plugin requires Python 3.9 or above.")
 import supybot
 from supybot import world
 
@@ -43,23 +42,21 @@ from supybot import world
 __version__ = "15092021"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author("Barry Suridge", "Alcheri", "barry.suridge@outlook.com")
+__author__ = supybot.Author('Barry Suridge', 'Alcheri', '')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = "https://github.com/Alcheri/My-Limnoria-Plugins"
+__url__ = 'https://github.com/Alcheri/My-Limnoria-Plugins'
 
 import sys
-
 if sys.version_info <= (3, 9):
     raise RuntimeError("This plugin requires Python 3.9 or above.")
 from . import config
 from . import plugin
 from importlib import reload
-
 # In case we're being reloaded.
 reload(config)
 reload(plugin)
