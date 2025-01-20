@@ -42,8 +42,8 @@ except ImportError:
 
 try:
     from iso3166 import countries
-except Exception as ie:
-    raise Exception(f"Cannot import module: {ie}")
+except ImportError as ie:
+    raise ImportError(f"Cannot import module: {ie}")
 
 
 class ISO(callbacks.Plugin):

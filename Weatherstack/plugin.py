@@ -20,8 +20,8 @@ except ImportError:
 try:
     import aiohttp  # asynchronous HTTP client and server framework
     import asyncio  # asynchronous I/O
-except Exception as ie:
-    raise Exception(f"Cannot import module: {ie}")
+except ImportError as ie:
+    raise ImportError(f"Cannot import module: {ie}")
 
 # Unicode Symbols
 APOSTROPHE = "\N{APOSTROPHE}"
